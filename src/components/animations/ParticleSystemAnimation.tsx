@@ -8,6 +8,11 @@ interface ParticleSystemAnimationProps {
   velocityFactor?: number;
   forceDirection?: 'radial' | 'directional' | 'vortex';
   forceStrength?: number;
+  type?: 'centered' | 'repel' | 'orbit';
+  mousePosition?: { x: number | null; y: number | null };
+  showConnections?: boolean;
+  connectionDistance?: number;
+  maxConnectionOpacity?: number;
 }
 
 const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
@@ -17,6 +22,11 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
   velocityFactor = 1.5,
   forceDirection = 'directional',
   forceStrength = 1.0,
+  type,
+  mousePosition,
+  showConnections = false,
+  connectionDistance = 50,
+  maxConnectionOpacity = 0.2,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -65,8 +75,8 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
       for (let i = 0; i < particleCount; i++) {
         const size = Math.random() * 4 + 1;
         particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
+          x: canvas ? Math.random() * canvas.width : 0,
+          y: canvas ? Math.random() * canvas.height : 0,
           vx: (Math.random() - 0.5) * velocityFactor,
           vy: (Math.random() - 0.5) * velocityFactor,
           size,
@@ -161,45 +171,87 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
           p.life = 0;
           p.maxLife = Math.random() * 100 + 50;
         }
+
+        // Add attraction or repulsion effect
+        if (type === 'centered') {
+          const centerX = canvas ? canvas.width / 2 : 0;
+          const centerY = canvas ? canvas.height / 2 : 0;
+          const dx = centerX - p.x;
+          const dy = centerY - p.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance > 5) {
+            p.vx += dx / distance * 0.02;
+            p.vy += dy / distance * 0.02;
+          }
+        } else if (type === 'repel') {
+          const mouseX = mousePosition?.x;
+          const mouseY = mousePosition?.y;
+          
+          if (mouseX !== null && mouseY !== null) {
+            const dx = p.x - mouseX;
+            const dy = p.y - mouseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 150) {
+              p.vx += dx / distance * 0.1;
+              p.vy += dy / distance * 0.1;
+            }
+          }
+        } else if (type === 'orbit') {
+          const centerX = canvas ? canvas.width / 2 : 0;
+          const centerY = canvas ? canvas.height / 2 : 0;
+          const dx = centerX - p.x;
+          const dy = centerY - p.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Tangential velocity for orbit effect
+          p.vx += -dy / distance * 0.01;
+          p.vy += dx / distance * 0.01;
+          
+          // Small attraction to keep particles from flying away
+          p.vx += dx / distance * 0.001;
+          p.vy += dy / distance * 0.001;
+        }
       }
     }
 
     // Draw all particles
     function drawParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        
-        // Calculate opacity based on life
-        const opacityFactor = 1 - p.life / p.maxLife;
-        
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.opacity * opacityFactor;
-        ctx.fill();
-        
-        // Draw connections between nearby particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < 50) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            const lineOpacity = (1 - distance / 50) * 0.2 * opacityFactor;
-            ctx.strokeStyle = p.color;
-            ctx.globalAlpha = lineOpacity;
-            ctx.stroke();
+      // Clear the canvas
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw connections between particles
+      if (showConnections && ctx) {
+        particles.forEach((p, index) => {
+          // Draw connections to nearby particles
+          for (let j = index + 1; j < particles.length; j++) {
+            const p2 = particles[j];
+            const dx = p.x - p2.x;
+            const dy = p.y - p2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < connectionDistance) {
+              const lineOpacity = (1 - distance / connectionDistance) * maxConnectionOpacity * p.opacity * p2.opacity;
+              
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(p2.x, p2.y);
+              
+              ctx.strokeStyle = p.color;
+              ctx.globalAlpha = lineOpacity;
+              ctx.stroke();
+            }
           }
-        }
+        });
       }
       
-      ctx.globalAlpha = 1;
+      // Reset global alpha
+      if (ctx) {
+        ctx.globalAlpha = 1;
+      }
     }
 
     // Animation loop
@@ -216,7 +268,7 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
       cancelAnimationFrame(animationRef.current);
       resizeObserver.disconnect();
     };
-  }, [particleCount, particleColor, velocityFactor, forceDirection, forceStrength]);
+  }, [particleCount, particleColor, velocityFactor, forceDirection, forceStrength, type, mousePosition, showConnections, connectionDistance, maxConnectionOpacity]);
 
   return (
     <motion.div 

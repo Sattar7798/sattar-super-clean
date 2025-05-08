@@ -159,7 +159,14 @@ const ThreeScene: React.FC<ThreeSceneProps> = ({
         }}
         onCreated={({ gl, scene }) => {
           gl.setClearColor(new THREE.Color(backgroundColor));
-          gl.physicallyCorrectLights = true;
+          // @ts-ignore - Handle both older and newer versions of Three.js
+          if (gl.useLegacyLights !== undefined) {
+            // @ts-ignore - For Three.js r138+
+            gl.useLegacyLights = false;
+          } else {
+            // @ts-ignore - For older Three.js versions
+            gl.physicallyCorrectLights = true;
+          }
         }}
       >
         {isLoading && <Loader />}

@@ -73,18 +73,25 @@ const InteractiveModelControls: React.FC<InteractiveModelControlsProps> = ({
   }, [camera, onCameraPresetChange]);
   
   // Section cut handler
-  const handleSectionChange = (axis: 'x' | 'y' | 'z', value: number) => {
-    setSectionValues(prev => ({ ...prev, [axis]: value }));
+  const handleSectionChange = (axis: 'x' | 'y' | 'z', value: number | [number, number]) => {
+    const newValue = typeof value === 'number' ? value : value[0]; // Use first number if it's an array
+    setSectionValues(prev => ({
+      ...prev,
+      [axis]: newValue
+    }));
+    
     if (onSectionChange) {
-      onSectionChange(axis, value);
+      onSectionChange(axis, newValue);
     }
   };
   
   // Explode view handler
-  const handleExplodeChange = (value: number) => {
-    setExplodeFactor(value);
+  const handleExplodeChange = (value: number | [number, number]) => {
+    const newValue = typeof value === 'number' ? value : value[0];
+    setExplodeFactor(newValue);
+    
     if (onExplodeChange) {
-      onExplodeChange(value);
+      onExplodeChange(newValue);
     }
   };
   

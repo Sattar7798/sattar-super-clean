@@ -284,44 +284,55 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
     ],
   };
   
-  // Chart options
-  const chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
+  // Create different chart options by type
+  const getChartOptionsByType = (type: 'line' | 'scatter' | 'bar') => {
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: {
+            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+          },
+          ticks: {
+            color: theme === 'dark' ? '#ccc' : '#666',
+          },
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+          },
+          ticks: {
+            color: theme === 'dark' ? '#ccc' : '#666',
+          },
+        },
       },
-      title: {
-        display: true,
-        text: `${selectedModel?.name || 'Model'} Predictions`,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: {
+            color: theme === 'dark' ? '#ccc' : '#666',
+          },
+        },
+        tooltip: {
+          backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          titleColor: theme === 'dark' ? '#fff' : '#000',
+          bodyColor: theme === 'dark' ? '#ccc' : '#666',
+          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+          borderWidth: 1,
+        },
       },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            const label = context.dataset.label || '';
-            const value = context.raw;
-            
-            // Display confidence intervals if available
-            if (
-              showConfidenceIntervals && 
-              predictionResult?.confidenceIntervals && 
-              context.datasetIndex === 0 // Only for predicted values
-            ) {
-              const ci = predictionResult.confidenceIntervals[context.dataIndex];
-              return `${label}: ${value.toFixed(2)} (CI: ${ci[0].toFixed(2)} - ${ci[1].toFixed(2)})`;
-            }
-            
-            return `${label}: ${value.toFixed(2)}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      }
-    },
+    };
+
+    return baseOptions;
   };
+
+  // Chart options
+  const lineChartOptions = getChartOptionsByType('line');
+  const scatterChartOptions = getChartOptionsByType('scatter');
+  const barChartOptions = getChartOptionsByType('bar');
   
   return (
     <motion.div 
@@ -375,7 +386,11 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
               min={5}
               max={50}
               value={numDataPoints}
-              onChange={setNumDataPoints}
+              onChange={(value) => {
+                // Handle both single number and array cases
+                const newValue = Array.isArray(value) ? value[0] : value;
+                setNumDataPoints(newValue);
+              }}
             />
           </div>
           
@@ -457,13 +472,13 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
             <div className="space-y-4">
               <div className="h-64">
                 {visualizationType === 'line' && (
-                  <Line data={chartData} options={chartOptions} />
+                  <Line data={chartData} options={lineChartOptions} />
                 )}
                 {visualizationType === 'scatter' && (
-                  <Scatter data={chartData} options={chartOptions} />
+                  <Scatter data={chartData} options={scatterChartOptions} />
                 )}
                 {visualizationType === 'bar' && (
-                  <Line data={chartData} options={chartOptions} />
+                  <Line data={chartData} options={barChartOptions} />
                 )}
               </div>
               
@@ -496,21 +511,21 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
                         <div className="text-sm text-gray-500 dark:text-gray-300">Accuracy</div>
                         <div className="text-lg font-semibold">
                           {(predictionResult.metrics.accuracy || 0).toFixed(2)}
-                          <Progress percent={Number((predictionResult.metrics.accuracy || 0) * 100).toFixed(0)} size="small" />
+                          <Progress percent={Number((predictionResult.metrics.accuracy || 0) * 100)} size="small" />
                         </div>
                       </div>
                       <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
                         <div className="text-sm text-gray-500 dark:text-gray-300">Precision</div>
                         <div className="text-lg font-semibold">
                           {(predictionResult.metrics.precision || 0).toFixed(2)}
-                          <Progress percent={Number((predictionResult.metrics.precision || 0) * 100).toFixed(0)} size="small" />
+                          <Progress percent={Number((predictionResult.metrics.precision || 0) * 100)} size="small" />
                         </div>
                       </div>
                       <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
                         <div className="text-sm text-gray-500 dark:text-gray-300">Recall</div>
                         <div className="text-lg font-semibold">
                           {(predictionResult.metrics.recall || 0).toFixed(2)}
-                          <Progress percent={Number((predictionResult.metrics.recall || 0) * 100).toFixed(0)} size="small" />
+                          <Progress percent={Number((predictionResult.metrics.recall || 0) * 100)} size="small" />
                         </div>
                       </div>
                     </>

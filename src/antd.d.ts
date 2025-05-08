@@ -410,6 +410,9 @@ declare module 'antd' {
     success?: { percent: number; strokeColor: string };
     trailColor?: string;
     width?: number;
+    gapDegree?: number;
+    gapPosition?: 'top' | 'bottom' | 'left' | 'right';
+    size?: 'default' | 'small';
     className?: string;
     style?: React.CSSProperties;
     children?: React.ReactNode;
