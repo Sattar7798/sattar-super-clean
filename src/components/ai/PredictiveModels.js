@@ -30,7 +30,7 @@ ChartJS.register(
 );
 
 /**
- * PredictiveModels - Component showcasing Dr. Hedayat's AI-based predictive models
+ * PredictiveModels - Component showcasing my AI-based predictive models
  * for structural engineering applications
  */
 const PredictiveModels = ({

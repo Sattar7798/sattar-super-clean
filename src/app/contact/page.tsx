@@ -128,7 +128,7 @@ export default function ContactPage() {
   return (
     <Layout>
       <PageHeader
-        title="Contact Sattar Hedayat"
+        title="Contact Me"
         subtitle="Get in touch for research collaborations, speaking engagements, or consultations"
         imageUrl="/assets/images/contact-header.jpg"
       />
@@ -218,7 +218,7 @@ export default function ContactPage() {
                       Message Sent Successfully!
                     </h3>
                     <p className="text-green-700 dark:text-green-400 mb-4">
-                      Thank you for reaching out. Sattar Hedayat will respond to your message as soon as possible.
+                      Thank you for reaching out. I will respond to your message as soon as possible.
                     </p>
                     <button
                       onClick={() => setFormStatus((prev: FormStatus) => ({ ...prev, isSubmitted: false }))}
@@ -369,7 +369,7 @@ export default function ContactPage() {
             >
               <h3 className="text-xl font-bold mb-4">For Students</h3>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Interested in joining Dr. Hedayat's research team? Prospective graduate students should include their research interests, CV, and academic background in their message.
+                Interested in joining my research team? Prospective graduate students should include their research interests, CV, and academic background in their message.
               </p>
               <a 
                 href="#"
@@ -396,7 +396,7 @@ export default function ContactPage() {
             >
               <h3 className="text-xl font-bold mb-4">For Research Collaborators</h3>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Dr. Hedayat welcomes collaborations with other researchers and institutions on projects related to structural engineering, seismic analysis, and AI integration.
+                I welcome collaborations with other researchers and institutions on projects related to structural engineering, seismic analysis, and AI integration.
               </p>
               <a 
                 href="#"
@@ -423,7 +423,7 @@ export default function ContactPage() {
             >
               <h3 className="text-xl font-bold mb-4">For Industry Partners</h3>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Looking for expert consultation on structural engineering problems or AI-enhanced solutions? Dr. Hedayat provides consulting services for industry partners.
+                Looking for expert consultation on structural engineering problems or AI-enhanced solutions? I provide consulting services for industry partners.
               </p>
               <a 
                 href="#"

@@ -6,7 +6,7 @@ import Loader from '../ui/Loader';
 
 /**
  * ResearchAssistant - AI-powered research assistant component
- * This component demonstrates Dr. Hedayat's work on AI-assisted research tools
+ * This component demonstrates my work on AI-assisted research tools
  * for structural engineering problems.
  */
 const ResearchAssistant = ({
@@ -306,7 +306,7 @@ const ResearchAssistant = ({
               className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg mb-4"
             >
               <TypeWriter
-                text="This AI research assistant uses natural language processing to understand complex engineering queries and retrieves the most relevant research papers, projects, and publications from Dr. Hedayat's research database. It analyzes structural engineering terminology to match with semantic concepts rather than just keywords."
+                text="This AI research assistant uses natural language processing to understand complex engineering queries and retrieves the most relevant research papers, projects, and publications from my research database. It analyzes structural engineering terminology to match with semantic concepts rather than just keywords."
                 speed={20}
                 className="text-sm text-gray-700 dark:text-gray-300"
               />
@@ -384,8 +384,8 @@ const ResearchAssistant = ({
           <AIIcon size={24} className="mr-2" />
           AI Research Assistant
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Explore Dr. Hedayat's research database using natural language queries. Ask questions about structural engineering, seismic analysis, or AI integration.
+        <p className="text-sm text-gray-500 mb-6">
+          This AI assistant can help you find papers, projects, and publications from my research database. It analyzes structural engineering terminology to match with semantic concepts rather than just keywords.
         </p>
       </div>
 

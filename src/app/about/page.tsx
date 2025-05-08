@@ -9,6 +9,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import Timeline from '@/components/ui/Timeline';
 import { StructureIcon, EarthquakeIcon, AIIcon } from '@/components/ui/AnimatedIcons';
 import Layout from '@/components/layout/LayoutFix';
+import Link from 'next/link';
 
 export default function AboutPage() {
   // Professional expertise
@@ -136,7 +137,7 @@ export default function AboutPage() {
   return (
     <Layout>
       <PageHeader
-        title="About Sattar Hedayat"
+        title="About Me"
         subtitle="Sustainable Building Engineer, Seismic Specialist, and AI Innovator"
         imageUrl="/assets/images/about-header.jpg"
       />
@@ -154,7 +155,7 @@ export default function AboutPage() {
                 I am a sustainable building engineer specializing in the integration of artificial intelligence with structural analysis and seismic engineering. Currently pursuing a Master's degree at Sapienza University in Rome, my work focuses on innovative approaches to structural resilience and seismic hazard prediction.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                My research integrates AI and ML algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring. My works bridges the gap between traditional structural engineering principles and cutting-edge machine learning techniques.
+                My research integrates AI and ML algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring. My work bridges the gap between traditional structural engineering principles and cutting-edge machine learning techniques.
               </p>
               <p className="text-gray-700 dark:text-gray-300">
                 I am particularly focused on ML algorithms for predicting seismic hazards, AI applications in structural health monitoring, and integrating BIM with smart monitoring systems.
@@ -169,7 +170,7 @@ export default function AboutPage() {
             >
               <Image
                 src="/assets/images/dr-hedayat-profile.jpg"
-                alt="Dr. Sattar Hedayat"
+                alt="My Profile Photo"
                 fill
                 style={{ objectFit: 'cover' }}
                 className="rounded-lg"
@@ -292,21 +293,12 @@ export default function AboutPage() {
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold mb-6">Get in Touch</h2>
             <p className="text-gray-700 dark:text-gray-300 mb-8">
-              Dr. Hedayat welcomes collaboration opportunities, speaking engagements, and consultation requests. He is also actively looking for motivated graduate students interested in structural engineering and AI integration.
+              I welcome collaboration opportunities, speaking engagements, and consultation requests. I am also actively looking for motivated graduate students interested in structural engineering and AI research.
             </p>
-            <div className="flex justify-center space-x-4">
-              <a 
-                href="/contact" 
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Contact Dr. Hedayat
-              </a>
-              <a 
-                href="/research" 
-                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-              >
-                Explore Research
-              </a>
+            <div className="mt-6">
+              <Link href="/contact" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                Contact Me
+              </Link>
             </div>
           </div>
         </Section>

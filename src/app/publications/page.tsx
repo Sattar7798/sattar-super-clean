@@ -122,7 +122,7 @@ export default function PublicationsPage() {
     <Layout>
       <PageHeader
         title="Publications"
-        subtitle="Explore Sattar Hedayat's research contributions and scholarly publications"
+        subtitle="Explore my research contributions and scholarly publications"
         imageUrl="/assets/images/publications-header.jpg"
       />
       

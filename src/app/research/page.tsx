@@ -148,8 +148,8 @@ export default function ResearchPage() {
         <Section className="bg-gray-50 dark:bg-gray-900 py-16">
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-2">AI-Enhanced Structural Analysis</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-8 max-w-3xl">
-              Explore Sattar Hedayat's cutting-edge predictive models that combine artificial intelligence
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+              Explore my cutting-edge predictive models that combine artificial intelligence
               with structural engineering principles to revolutionize how we analyze and design buildings.
             </p>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -186,8 +186,8 @@ export default function ResearchPage() {
         <Section className="bg-gray-50 dark:bg-gray-900 py-16">
           <div>
             <h2 className="text-3xl font-bold mb-2">Research Assistant</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-8 max-w-3xl">
-              Use our AI-powered research assistant to explore Sattar Hedayat's research database
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+              Use our AI-powered research assistant to explore my research database
               and find relevant publications and information.
             </p>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">

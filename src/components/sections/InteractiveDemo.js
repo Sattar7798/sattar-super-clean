@@ -260,13 +260,11 @@ const InteractiveDemo = () => {
   return (
     <section className="py-16 bg-white dark:bg-gray-900" id="interactive-demo">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Interactive Structural Demonstrations
-          </h2>
-          <p className="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
-            Explore interactive 3D models and simulations that showcase Dr. Hedayat's research in 
-            structural engineering and seismic analysis.
+        <div className="text-center max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4">Interactive Structural Visualizations</h2>
+          <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
+            Explore interactive 3D models and simulations that showcase my research in
+            structural engineering, seismic analysis, and AI-enhanced building design.
           </p>
         </div>
         
@@ -308,15 +306,12 @@ const InteractiveDemo = () => {
         
         {activeDemo === 'building' ? renderBuildingDemo() : renderSeismicDemo()}
         
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            These interactive demonstrations are simplified versions of Dr. Hedayat's professional 
-            engineering software. For access to full-featured analysis tools, please contact directly.
+        <div className="mt-12 text-center text-sm text-gray-500 max-w-2xl mx-auto">
+          <p>
+            These interactive demonstrations are simplified versions of my professional
+            analysis tools. For more detailed simulations or specific engineering inquiries,
+            please contact me directly.
           </p>
-          
-          <Button href="/contact" variant="primary" isOutlined={true}>
-            Request Professional Access
-          </Button>
         </div>
       </div>
     </section>

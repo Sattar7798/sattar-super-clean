@@ -8,7 +8,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 /**
- * AIIntegrationSection - Showcases Dr. Hedayat's integration of AI with structural engineering
+ * AIIntegrationSection - Showcases my integration of AI with structural engineering
  * Highlights research areas, applications, and interactive demonstrations
  */
 const AIIntegrationSection = () => {
@@ -155,7 +155,7 @@ const AIIntegrationSection = () => {
             AI Integration in Structural Engineering
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Dr. Hedayat's pioneering research merges artificial intelligence with structural engineering, 
+            My pioneering research merges artificial intelligence with structural engineering, 
             creating intelligent systems that revolutionize how we design, analyze, and monitor buildings 
             and infrastructure.
           </p>
@@ -284,7 +284,7 @@ const AIIntegrationSection = () => {
           AI Research Assistant
         </h3>
         <p className="text-gray-600 dark:text-gray-400">
-          Experience Dr. Hedayat's AI-powered research assistant that helps engineers find relevant 
+          Experience my AI-powered research assistant that helps engineers find relevant 
           literature, data, and solutions for structural engineering problems. This natural language 
           interface can understand complex engineering queries and provide relevant information.
         </p>
