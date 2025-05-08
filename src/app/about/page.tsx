@@ -151,13 +151,13 @@ export default function AboutPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Professional Background</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Sattar Hedayat is a sustainable building engineer specializing in the integration of artificial intelligence with structural analysis and seismic engineering. Currently pursuing a Master's degree at Sapienza University in Rome, his work focuses on innovative approaches to structural resilience and seismic hazard prediction.
+                I am a sustainable building engineer specializing in the integration of artificial intelligence with structural analysis and seismic engineering. Currently pursuing a Master's degree at Sapienza University in Rome, my work focuses on innovative approaches to structural resilience and seismic hazard prediction.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                His research integrates AI and ML algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring. Sattar's work bridges the gap between traditional structural engineering principles and cutting-edge machine learning techniques.
+                My research integrates AI and ML algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring. My works bridges the gap between traditional structural engineering principles and cutting-edge machine learning techniques.
               </p>
               <p className="text-gray-700 dark:text-gray-300">
-                Sattar is particularly focused on ML algorithms for predicting seismic hazards, AI applications in structural health monitoring, and integrating BIM with smart monitoring systems.
+                I am particularly focused on ML algorithms for predicting seismic hazards, AI applications in structural health monitoring, and integrating BIM with smart monitoring systems.
               </p>
             </motion.div>
 
