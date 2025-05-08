@@ -217,13 +217,23 @@ declare module 'antd' {
 
   export class Tooltip extends React.Component<TooltipProps, any> {}
 
+  export interface RadioChangeEvent {
+    target: {
+      value: any;
+      checked: boolean;
+    };
+    preventDefault: () => void;
+    stopPropagation: () => void;
+    nativeEvent: MouseEvent;
+  }
+
   export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     autoFocus?: boolean;
     checked?: boolean;
     defaultChecked?: boolean;
     value?: any;
     disabled?: boolean;
-    onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
+    onChange?: (e: RadioChangeEvent) => void;
     className?: string;
     style?: React.CSSProperties;
     children?: React.ReactNode;
@@ -238,7 +248,7 @@ declare module 'antd' {
     optionType?: 'default' | 'button';
     size?: 'large' | 'middle' | 'small';
     value?: any;
-    onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
+    onChange?: (e: RadioChangeEvent) => void;
     className?: string;
     style?: React.CSSProperties;
     children?: React.ReactNode;
