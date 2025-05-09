@@ -165,7 +165,7 @@ const ThreeScene: React.FC<ThreeSceneProps> = ({
             gl.useLegacyLights = false;
           } else {
             // @ts-ignore - For older Three.js versions
-            gl.physicallyCorrectLights = true;
+          gl.physicallyCorrectLights = true;
           }
         }}
       >

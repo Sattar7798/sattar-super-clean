@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
   title: 'Sattar Hedayat | Structural Engineering & Seismic Analysis',
@@ -7,8 +7,12 @@ export const metadata: Metadata = {
   keywords: 'structural engineering, seismic analysis, AI, building engineering, research, earthquake, structural simulation',
   authors: [{ name: 'Sattar Hedayat' }],
   creator: 'Sattar Hedayat',
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

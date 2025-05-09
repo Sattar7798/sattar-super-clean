@@ -220,7 +220,7 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
     function drawParticles() {
       // Clear the canvas
       if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
 
       // Draw connections between particles
@@ -228,29 +228,29 @@ const ParticleSystemAnimation: React.FC<ParticleSystemAnimationProps> = ({
         particles.forEach((p, index) => {
           // Draw connections to nearby particles
           for (let j = index + 1; j < particles.length; j++) {
-            const p2 = particles[j];
-            const dx = p.x - p2.x;
-            const dy = p.y - p2.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
             if (distance < connectionDistance) {
               const lineOpacity = (1 - distance / connectionDistance) * maxConnectionOpacity * p.opacity * p2.opacity;
               
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(p2.x, p2.y);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
               
-              ctx.strokeStyle = p.color;
-              ctx.globalAlpha = lineOpacity;
-              ctx.stroke();
-            }
+            ctx.strokeStyle = p.color;
+            ctx.globalAlpha = lineOpacity;
+            ctx.stroke();
           }
+        }
         });
       }
       
       // Reset global alpha
       if (ctx) {
-        ctx.globalAlpha = 1;
+      ctx.globalAlpha = 1;
       }
     }
 

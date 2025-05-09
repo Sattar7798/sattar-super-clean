@@ -287,7 +287,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
   // Create different chart options by type
   const getChartOptionsByType = (type: 'line' | 'scatter' | 'bar') => {
     const baseOptions = {
-      responsive: true,
+    responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
@@ -309,14 +309,14 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
           },
         },
       },
-      plugins: {
-        legend: {
-          position: 'top' as const,
+    plugins: {
+      legend: {
+        position: 'top' as const,
           labels: {
             color: theme === 'dark' ? '#ccc' : '#666',
-          },
-        },
-        tooltip: {
+      },
+      },
+      tooltip: {
           backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           titleColor: theme === 'dark' ? '#fff' : '#000',
           bodyColor: theme === 'dark' ? '#ccc' : '#666',

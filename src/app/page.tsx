@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/layout/LayoutFix';
 import BuildingAnimation from '@/components/animations/BuildingAnimation';
 import Link from 'next/link';
+// Import issue - temporarily commented out
+// import SeismicVisualizationPromo from '@/components/sections/SeismicVisualizationPromo';
 
 export default function Home() {
   return (
@@ -169,6 +171,27 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+      
+      {/* Enhanced Seismic Visualization Promo - NEW SECTION */}
+      {/* Temporarily commented out due to import issues
+      <SeismicVisualizationPromo /> 
+      */}
+      {/* Temporary placeholder */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-4">Advanced Seismic Visualization</h2>
+          <p className="text-lg max-w-3xl mx-auto mb-6">
+            Explore our state-of-the-art interactive seismic visualization with WebGL rendering,
+            realistic physics, and real earthquake data.
+          </p>
+          <Link 
+            href="/interactive-model" 
+            className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors duration-300"
+          >
+            Try It Now →
+          </Link>
         </div>
       </section>
       

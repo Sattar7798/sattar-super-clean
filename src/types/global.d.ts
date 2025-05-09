@@ -1,0 +1,1 @@
+/// <reference path="./seismic-components.d.ts" /> 
