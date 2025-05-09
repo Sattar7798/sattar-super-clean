@@ -29,7 +29,7 @@ const Footer = () => {
     { title: 'Contact', links: [
       { name: 'Email', path: 'mailto:sattar.hedayat@university.edu' },
       { name: 'Office', info: 'Engineering Building, Room 3025' },
-      { name: 'Phone', info: '+1 (555) 123-4567' },
+      { name: 'Phone', info: '+39 388 9784912' },
     ]},
   ];
 

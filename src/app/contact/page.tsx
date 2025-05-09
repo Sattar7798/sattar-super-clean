@@ -99,14 +99,14 @@ export default function ContactPage() {
     {
       icon: <PhoneIcon className="w-5 h-5" />,
       title: 'Phone',
-      content: '+39 388 978 4912',
+      content: '+39 388 9784912',
       link: 'tel:+393889784912'
     },
     {
       icon: <LocationIcon className="w-5 h-5" />,
       title: 'Office',
-      content: 'Rome, Italy',
-      link: 'https://maps.google.com/?q=Sapienza+University+Rome+Italy'
+      content: 'Roma, Italy',
+      link: 'https://maps.google.com/?q=Sapienza+University+Roma+Italy'
     },
     {
       icon: <ClockIcon className="w-5 h-5" />,
@@ -342,11 +342,11 @@ export default function ContactPage() {
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Visit the Lab</h2>
             <p className="text-gray-700 dark:text-gray-300 mb-8">
-              Smart Structures Laboratory is located in Building 5, MIT Campus. Visitors are welcome during open house events or by appointment.
+              Smart Structures Laboratory is located in Building 5, Sapienza University Campus, Roma, Italy. Visitors are welcome during open house events or by appointment.
             </p>
             <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2948.224627294724!2d-71.09476!3d42.360091!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e370a9563dc44b%3A0x8467c6b6f549a352!2sMassachusetts%20Institute%20of%20Technology!5e0!3m2!1sen!2sus!4v1644314841097!5m2!1sen!2sus"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2969.654886661852!2d12.512792076464198!3d41.90375547115468!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f61a650625e5f%3A0x8b5edd1c4c986e59!2sSapienza%20University%20of%20Rome!5e0!3m2!1sen!2sit!4v1654314841097!5m2!1sen!2sit"
                 width="100%"
                 height="450"
                 style={{ border: 0 }}
