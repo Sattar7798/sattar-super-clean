@@ -293,19 +293,19 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
         x: {
           beginAtZero: true,
           grid: {
-            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            color: 'rgba(255, 255, 255, 0.06)',
           },
           ticks: {
-            color: theme === 'dark' ? '#ccc' : '#666',
+            color: '#9ca3af',
           },
         },
         y: {
           beginAtZero: true,
           grid: {
-            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            color: 'rgba(255, 255, 255, 0.06)',
           },
           ticks: {
-            color: theme === 'dark' ? '#ccc' : '#666',
+            color: '#9ca3af',
           },
         },
       },
@@ -313,14 +313,14 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
       legend: {
         position: 'top' as const,
           labels: {
-            color: theme === 'dark' ? '#ccc' : '#666',
+            color: '#d1d5db',
       },
       },
       tooltip: {
-          backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-          titleColor: theme === 'dark' ? '#fff' : '#000',
-          bodyColor: theme === 'dark' ? '#ccc' : '#666',
-          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(10, 15, 28, 0.9)',
+          titleColor: '#f3f4f6',
+          bodyColor: '#d1d5db',
+          borderColor: 'rgba(99, 102, 241, 0.3)',
           borderWidth: 1,
         },
       },
@@ -336,17 +336,17 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
   
   return (
     <motion.div 
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className} ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}
+      className={`${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-4">AI Structural Prediction Models</h2>
+      <h2 className="text-xl font-bold mb-5 text-white">AI Structural Prediction Models</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="space-y-4">
           <div>
-            <label className="block mb-2 text-sm font-medium">Select Model</label>
+            <label className="block mb-2 text-sm font-medium text-gray-300">Select Model</label>
             <Select
               className="w-full"
               value={selectedModelId}
@@ -358,7 +358,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
               placeholder="Select a model"
             />
             {selectedModel && (
-              <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="mt-2 text-sm text-gray-500">
                 {selectedModel.description}
               </div>
             )}
@@ -366,7 +366,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
           
           {selectedModel && (
             <div>
-              <label className="block mb-2 text-sm font-medium">Select Dataset</label>
+              <label className="block mb-2 text-sm font-medium text-gray-300">Select Dataset</label>
               <Select
                 className="w-full"
                 value={selectedDataset}
@@ -381,7 +381,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
           )}
           
           <div>
-            <label className="block mb-2 text-sm font-medium">Number of Data Points</label>
+            <label className="block mb-2 text-sm font-medium text-gray-300">Number of Data Points</label>
             <Slider
               min={5}
               max={50}
@@ -396,7 +396,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
           
           {allowModelComparison && (
             <div>
-              <label className="block mb-2 text-sm font-medium">Compare with Model</label>
+              <label className="block mb-2 text-sm font-medium text-gray-300">Compare with Model</label>
               <Select
                 className="w-full"
                 value={comparisonModelId}
@@ -416,7 +416,7 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
           )}
           
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Real-time Updates</label>
+            <label className="text-sm font-medium text-gray-300">Real-time Updates</label>
             <Switch
               checked={enableRealTimeData}
               onChange={(checked) => {
@@ -486,44 +486,44 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   {selectedModel?.type === 'regression' && (
                     <>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Mean Squared Error</div>
-                        <div className="text-lg font-semibold">{predictionResult.metrics.mse?.toFixed(3)}</div>
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Mean Squared Error</div>
+                        <div className="text-lg font-semibold text-white">{predictionResult.metrics.mse?.toFixed(3)}</div>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Root MSE</div>
-                        <div className="text-lg font-semibold">{predictionResult.metrics.rmse?.toFixed(3)}</div>
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Root MSE</div>
+                        <div className="text-lg font-semibold text-white">{predictionResult.metrics.rmse?.toFixed(3)}</div>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Mean Abs Error</div>
-                        <div className="text-lg font-semibold">{predictionResult.metrics.mae?.toFixed(3)}</div>
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Mean Abs Error</div>
+                        <div className="text-lg font-semibold text-white">{predictionResult.metrics.mae?.toFixed(3)}</div>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">R² Score</div>
-                        <div className="text-lg font-semibold">{predictionResult.metrics.r2?.toFixed(3)}</div>
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">R² Score</div>
+                        <div className="text-lg font-semibold text-white">{predictionResult.metrics.r2?.toFixed(3)}</div>
                       </div>
                     </>
                   )}
                   
                   {selectedModel?.type === 'classification' && (
                     <>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Accuracy</div>
-                        <div className="text-lg font-semibold">
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Accuracy</div>
+                        <div className="text-lg font-semibold text-white">
                           {(predictionResult.metrics.accuracy || 0).toFixed(2)}
                           <Progress percent={Number((predictionResult.metrics.accuracy || 0) * 100)} size="small" />
                         </div>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Precision</div>
-                        <div className="text-lg font-semibold">
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Precision</div>
+                        <div className="text-lg font-semibold text-white">
                           {(predictionResult.metrics.precision || 0).toFixed(2)}
                           <Progress percent={Number((predictionResult.metrics.precision || 0) * 100)} size="small" />
                         </div>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">Recall</div>
-                        <div className="text-lg font-semibold">
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                        <div className="text-xs text-gray-400">Recall</div>
+                        <div className="text-lg font-semibold text-white">
                           {(predictionResult.metrics.recall || 0).toFixed(2)}
                           <Progress percent={Number((predictionResult.metrics.recall || 0) * 100)} size="small" />
                         </div>
@@ -534,8 +534,8 @@ const PredictiveModels: React.FC<PredictiveModelsProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-              <p className="text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-center h-64 rounded-xl border border-white/10 bg-white/5">
+              <p className="text-gray-500">
                 Select a model and dataset to run predictions
               </p>
             </div>

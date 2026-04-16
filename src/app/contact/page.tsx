@@ -142,33 +142,33 @@ export default function ContactPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+                className="glass-panel rounded-2xl p-6"
               >
-                <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
+                <h2 className="text-2xl font-bold mb-6 text-white">Contact Information</h2>
                 <div className="space-y-6">
                   {contactInfo.map((item, index) => (
                     <div key={index} className="flex">
-                      <div className="text-blue-600 dark:text-blue-400 mr-4">
+                      <div className="text-indigo-400 mr-4 mt-0.5">
                         {item.icon}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                        <h3 className="font-semibold text-white text-sm">
                           {item.title}
                         </h3>
                         {item.link ? (
                           <a 
                             href={item.link} 
-                            className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                            className="text-gray-400 hover:text-indigo-300 transition-colors text-sm"
                             target={item.link.startsWith('http') ? '_blank' : undefined}
                             rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                           >
                             {item.content}
                           </a>
                         ) : (
-                          <p className="text-gray-600 dark:text-gray-300">{item.content}</p>
+                          <p className="text-gray-400 text-sm">{item.content}</p>
                         )}
                         {item.secondary && (
-                          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                          <p className="text-gray-500 text-xs mt-1">
                             {item.secondary}
                           </p>
                         )}
@@ -177,22 +177,16 @@ export default function ContactPage() {
                   ))}
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                    Administration & Research Team
+                <div className="mt-8 pt-6 border-t border-white/5">
+                  <h3 className="font-semibold text-white text-sm mb-2">
+                    Direct Email
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    For administrative inquiries, please contact:
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    <strong>Sattar Hedayat</strong><br />
-                    <a 
-                      href="mailto:sattarhedayat2020@gmail.com"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      sattarhedayat2020@gmail.com
-                    </a>
-                  </p>
+                  <a 
+                    href="mailto:sattarhedayat2020@gmail.com"
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm break-all"
+                  >
+                    sattarhedayat2020@gmail.com
+                  </a>
                 </div>
               </motion.div>
             </div>
@@ -204,8 +198,8 @@ export default function ContactPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="lg:col-span-2"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold mb-6">Send a Message</h2>
+              <div className="glass-panel rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-white">Send a Message</h2>
                 
                 {formStatus.isSubmitted ? (
                   <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-800 rounded-lg p-6 text-center">
@@ -237,8 +231,8 @@ export default function ContactPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                          Name <span className="text-red-600">*</span>
+                        <label htmlFor="name" className="block text-gray-300 font-medium mb-2 text-sm">
+                          Name <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="text"
@@ -247,14 +241,14 @@ export default function ContactPage() {
                           value={formData.name}
                           onChange={handleChange}
                           required
-                          className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
                           placeholder="Your name"
                         />
                       </div>
                       
                       <div>
-                        <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                          Email <span className="text-red-600">*</span>
+                        <label htmlFor="email" className="block text-gray-300 font-medium mb-2 text-sm">
+                          Email <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="email"
@@ -263,7 +257,7 @@ export default function ContactPage() {
                           value={formData.email}
                           onChange={handleChange}
                           required
-                          className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
                           placeholder="Your email address"
                         />
                       </div>
@@ -278,7 +272,7 @@ export default function ContactPage() {
                         name="category"
                         value={formData.category}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white text-sm outline-none transition-all"
                       >
                         {categories.map((category) => (
                           <option key={category.value} value={category.value}>
@@ -289,8 +283,8 @@ export default function ContactPage() {
                     </div>
                     
                     <div>
-                      <label htmlFor="subject" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                        Subject <span className="text-red-600">*</span>
+                      <label htmlFor="subject" className="block text-gray-300 font-medium mb-2 text-sm">
+                        Subject <span className="text-red-400">*</span>
                       </label>
                       <input
                         type="text"
@@ -299,14 +293,14 @@ export default function ContactPage() {
                         value={formData.subject}
                         onChange={handleChange}
                         required
-                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
                         placeholder="Subject of your message"
                       />
                     </div>
                     
                     <div>
-                      <label htmlFor="message" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                        Message <span className="text-red-600">*</span>
+                      <label htmlFor="message" className="block text-gray-300 font-medium mb-2 text-sm">
+                        Message <span className="text-red-400">*</span>
                       </label>
                       <textarea
                         id="message"
@@ -315,7 +309,7 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         rows={6}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all resize-none"
                         placeholder="Your message"
                       ></textarea>
                     </div>
@@ -324,8 +318,8 @@ export default function ContactPage() {
                       <button
                         type="submit"
                         disabled={formStatus.isSubmitting}
-                        className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${
-                          formStatus.isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+                        className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] ${
+                          formStatus.isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]'
                         }`}
                       >
                         {formStatus.isSubmitting ? 'Sending...' : 'Send Message'}
@@ -338,7 +332,7 @@ export default function ContactPage() {
           </div>
         </Section>
         
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
+        <Section className="py-16">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Visit the Lab</h2>
             <p className="text-gray-700 dark:text-gray-300 mb-8">
@@ -365,10 +359,10 @@ export default function ContactPage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+              className="glass-panel rounded-2xl p-6"
             >
-              <h3 className="text-xl font-bold mb-4">For Students</h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-xl font-bold mb-4 text-white">For Students</h3>
+              <p className="text-gray-400 mb-4 text-sm">
                 Interested in joining my research team? Prospective graduate students should include their research interests, CV, and academic background in their message.
               </p>
               <a 
@@ -381,7 +375,7 @@ export default function ContactPage() {
                     categoryElement.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
               >
                 Apply as a Research Assistant →
               </a>
@@ -392,10 +386,10 @@ export default function ContactPage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+              className="glass-panel rounded-2xl p-6"
             >
-              <h3 className="text-xl font-bold mb-4">For Research Collaborators</h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-xl font-bold mb-4 text-white">For Research Collaborators</h3>
+              <p className="text-gray-400 mb-4 text-sm">
                 I welcome collaborations with other researchers and institutions on projects related to structural engineering, seismic analysis, and AI integration.
               </p>
               <a 
@@ -408,7 +402,7 @@ export default function ContactPage() {
                     categoryElement.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
               >
                 Propose a Collaboration →
               </a>
@@ -419,10 +413,10 @@ export default function ContactPage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+              className="glass-panel rounded-2xl p-6"
             >
-              <h3 className="text-xl font-bold mb-4">For Industry Partners</h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-xl font-bold mb-4 text-white">For Industry Partners</h3>
+              <p className="text-gray-400 mb-4 text-sm">
                 Looking for expert consultation on structural engineering problems or AI-enhanced solutions? I provide consulting services for industry partners.
               </p>
               <a 
@@ -435,7 +429,7 @@ export default function ContactPage() {
                     categoryElement.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
               >
                 Request a Consultation →
               </a>

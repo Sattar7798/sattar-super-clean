@@ -15,85 +15,89 @@ export default function ResearchPage() {
   // Research areas
   const researchAreas = [
     {
-      title: 'AI in Infrastructure Resilience',
-      icon: <AIIcon size={32} />,
-      description: 'Integrating AI and machine learning algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring.',
+      title: 'BIM Coordination & Automation',
+      icon: <AnalysisIcon size={32} />,
+      description: 'Leading multidisciplinary BIM coordination for infrastructure and public-sector projects. Developer of a pyRevit-based BIM automation platform for CME, 4D scheduling, and AI-assisted prezzario mapping.',
       topics: [
-        'AI-powered structural health monitoring',
-        'Deep reinforcement learning for HVAC control',
+        'Multi-disciplinary coordination (Architecture, Structure, MEP, Infrastructure)',
+        'Clash detection & resolution in Navisworks',
+        'LOD 200–400 model development in Revit',
+        'Scan-to-BIM workflows with Recap Pro & CloudCompare',
+        'Python & Dynamo BIM automation (CME, scheduling, families)',
+        'ISO 19650 & UNI 11337 compliance'
+      ]
+    },
+    {
+      title: 'AI in Structural Engineering',
+      icon: <AIIcon size={32} />,
+      description: 'Applying physics-informed AI, digital twins, and deep reinforcement learning to structural health monitoring, HVAC optimization, and seismic hazard prediction.',
+      topics: [
+        'Physics-informed RL (DDPG) for HVAC optimization',
+        'Digital twins for bioclimatic building design',
+        'XGBoost & LSTM for earthquake prediction',
         'CNN-LSTM networks for environmental monitoring',
         'Graph neural networks for structural anomaly detection',
-        'Remote monitoring solutions'
+        'Remote structural health monitoring'
       ]
     },
     {
-      title: 'ML in Seismic Hazard Prediction',
+      title: 'Seismic Analysis & Structural Resilience',
       icon: <EarthquakeIcon size={32} />,
-      description: 'Developing machine learning algorithms to predict potential earthquakes and seismic hazards based on historical data and environmental factors.',
+      description: 'Comprehensive seismic hazard assessment, structural vulnerability analysis, and real physics-driven SDOF simulation for building response prediction.',
       topics: [
-        'XGBoost for earthquake prediction',
-        'Random Forests for hazard assessment',
-        'LSTM networks for time-series seismic data',
-        'Geospatial analysis using QGIS',
-        'Seismic signal processing'
+        'SDOF Newmark-β numerical integration',
+        'Kanai-Tajimi stochastic ground motion generation',
+        'EC8 soil classification & amplification effects',
+        'ETABS drift analysis & SAFE foundation design',
+        'Building damage assessment (2017 Kermanshah case study)',
+        'Seismic signal processing & QGIS geospatial analysis'
       ]
     },
     {
-      title: 'Structural Health Monitoring',
+      title: 'Sustainability & BIM-based Renovation',
       icon: <StructureIcon size={32} />,
-      description: 'Implementing AI and ML techniques for monitoring the health and integrity of structural systems in real-time.',
+      description: 'Combining Building Information Modeling with sustainability goals for heritage structures, adaptive reuse, and energy-efficient building design.',
       topics: [
-        'Advanced mathematical models for predictive maintenance',
-        'Early detection of structural issues',
-        'Remote monitoring systems',
-        'Structural vulnerability assessment',
-        'Building damage analysis'
-      ]
-    },
-    {
-      title: 'BIM and Smart Monitoring',
-      icon: <AnalysisIcon size={32} />,
-      description: 'Combining Building Information Modeling with smart monitoring technologies for improved building management and analysis.',
-      topics: [
-        'H-BIM for historic buildings',
-        'BIM-based sustainable renovation',
-        'Integration of monitoring data with BIM models',
-        'Adaptive reuse strategies',
-        'Digital preservation techniques'
+        'H-BIM for historic structures (SNIA Viscosa factory, Rieti)',
+        'BIM-based sustainable renovation workflows',
+        'Adaptive reuse and urban regeneration',
+        'Cost-carbon twin tracking in BIM workflows',
+        'Renewable energy AI integration',
+        'Bioclimatic design optimization'
       ]
     }
   ];
 
-  // Featured research papers (updated with real publications)
+  // Featured research papers from CV
   const featuredPapers = [
     {
-      title: 'Seismic Hazard and Structural Vulnerability: A Study of Building Damage in the 2017 Kermanshah Earthquake',
-      authors: 'Hedayat, S., Ciampi, P., and Scarascia Mugnozza, G.',
-      journal: 'In preparation',
-      year: 2024,
-      abstract: 'This paper analyzes the structural vulnerabilities and seismic resilience factors leading to building damage and collapse in the 2017 Kermanshah Earthquake, providing insights for improved structural design and seismic resilience strategies.',
-      tags: ['Seismic Analysis', 'Structural Vulnerability', 'Earthquake Damage'],
-      imageUrl: '/assets/images/publications/seismic-vulnerability.jpg',
-      url: '/publications/seismic-vulnerability'
+      title: 'A Physics-Informed Reinforcement Learning Framework for HVAC Optimization: Thermodynamically-Constrained DDPG with Simulation-Based Validation',
+      authors: 'Hedayat, S.; Ziarati, T.; Manganelli, M.',
+      journal: 'Energies 2025, 18, 6310. MDPI',
+      year: 2025,
+      abstract: 'A physics-informed reinforcement learning (PIRL) framework combining thermodynamic constraints with DDPG for building HVAC optimization, validated through simulation with significant energy efficiency gains.',
+      tags: ['HVAC Optimization', 'Physics-Informed RL', 'DDPG', 'Energy Efficiency'],
+      imageUrl: '/assets/images/publications/seismic-puzzle.jpg',
+      url: 'https://doi.org/10.3390/en18236310'
     },
     {
-      title: 'Advancing Infrastructure Resilience through Smart Monitoring: Insights from the Genoa Bridge Catastrophe',
-      authors: 'Hedayat, S., Ziarati, T., Ciampi, P., Giannini, L.M.',
-      journal: 'In preparation',
-      year: 2024,
-      abstract: 'This research evaluates the structural integrity and resilience of the Genoa San Giorgio Bridge using advanced analysis tools such as ABAQUS software, aiming to identify and address structural vulnerabilities that may have led to the tragic collapse of the bridge in 2018.',
-      tags: ['Smart Monitoring', 'Infrastructure Resilience', 'Structural Analysis'],
+      title: 'Artificial Intelligence and Digital Twins for Bioclimatic Building Design: Innovations in Sustainability and Efficiency',
+      authors: 'Filippova, E.; Hedayat, S.; Ziarati, T.; Manganelli, M.',
+      journal: 'Energies 2025, 18, 5230. MDPI',
+      year: 2025,
+      abstract: 'Integration of AI and digital twin technology for bioclimatic building design to enhance sustainability and energy efficiency through real-time simulations.',
+      tags: ['Digital Twins', 'Bioclimatic Design', 'AI', 'Sustainability'],
       imageUrl: '/assets/images/publications/bridge-monitoring.jpg',
-      url: '/publications/bridge-monitoring'
+      url: 'https://doi.org/10.3390/en18195230'
     },
     {
       title: "Iran's Seismic Puzzle: Bridging Gaps in Earthquake Emergency Planning and Public Awareness for Risk Reduction",
-      authors: 'Ciampi, P., Giannini, L.M., Hedayat, S., Ziarati, T., and Scarascia Mugnozza, G.',
-      journal: 'Italian Journal of Engineering Geology and Environment',
+      authors: 'Ciampi, P.; Giannini, L.M.; Hedayat, S.; Ziarati, T.; Scarascia Mugnozza, G.',
+      journal: 'Italian Journal of Engineering Geology and Environment, 2024',
       year: 2024,
-      abstract: 'This study designed surveys across various regions of Iran to gather data on public awareness of local hazard risks, utilizing QGIS and Excel to generate detailed maps and graphs integrating demographic, geographic, and hazard data.',
-      tags: ['Seismic Risk', 'Public Awareness', 'Emergency Planning'],
-      imageUrl: '/assets/images/publications/seismic-puzzle.jpg',
+      abstract: 'Survey-based study on public seismic risk awareness in Iran using QGIS mapping and ML (XGBoost, Random Forests, LSTM) for earthquake prediction.',
+      tags: ['Seismic Risk', 'Public Awareness', 'Machine Learning', 'QGIS'],
+      imageUrl: '/assets/images/publications/seismic-vulnerability.jpg',
       url: 'https://doi.org/10.4408/IJEGE.2024-01.O-01'
     }
   ];
@@ -102,40 +106,44 @@ export default function ResearchPage() {
     <Layout>
       <PageHeader
         title="Research"
-        subtitle="Exploring the frontiers of sustainable building engineering, seismic analysis, and AI integration"
+        subtitle="Exploring the frontiers of BIM automation, structural engineering, seismic analysis, and AI integration"
         imageUrl="/assets/images/research-header.jpg"
       />
 
       <Container>
+        {/* Research Areas */}
         <Section>
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-6">Research Areas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {researchAreas.map((area, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+                  viewport={{ once: true, margin: '-50px' }}
+                  className="glass-panel glass-panel-hover rounded-2xl p-6"
                 >
                   <div className="flex items-center mb-4">
-                    <div className="mr-4 text-blue-600 dark:text-blue-400">
+                    <div className="mr-4 text-indigo-400">
                       {area.icon}
                     </div>
-                    <h3 className="text-xl font-bold">{area.title}</h3>
+                    <h3 className="text-xl font-bold text-white">{area.title}</h3>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  <p className="text-gray-400 mb-4 text-sm">
                     {area.description}
                   </p>
                   <div>
-                    <h4 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <h4 className="font-semibold mb-2 text-xs uppercase tracking-widest text-indigo-400/70">
                       Key Focus Areas
                     </h4>
-                    <ul className="list-disc pl-5 text-gray-700 dark:text-gray-300 space-y-1">
+                    <ul className="space-y-1">
                       {area.topics.map((topic, i) => (
-                        <li key={i}>{topic}</li>
+                        <li key={i} className="flex items-start gap-2 text-xs text-gray-400">
+                          <span className="mt-1.5 w-1 h-1 rounded-full bg-indigo-400 flex-shrink-0" />
+                          {topic}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -144,53 +152,54 @@ export default function ResearchPage() {
             </div>
           </div>
         </Section>
-        
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
+
+        {/* AI-Enhanced Section */}
+        <Section className="py-16">
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-2">AI-Enhanced Structural Analysis</h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-              Explore my cutting-edge predictive models that combine artificial intelligence
-              with structural engineering principles to revolutionize how we analyze and design buildings.
+            <p className="text-lg text-gray-400 mb-6">
+              Predictive models that combine artificial intelligence with structural engineering principles.
             </p>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <PredictiveModels 
+            <div className="glass-panel rounded-2xl p-6">
+              <PredictiveModels
                 initialModelType="displacement"
                 height="500px"
               />
             </div>
           </div>
         </Section>
-        
+
+        {/* Featured Papers */}
         <Section>
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-6">Featured Research</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {featuredPapers.map((paper, index) => (
-                <PublicationCard 
+                <PublicationCard
                   key={index}
                   publication={paper}
                 />
               ))}
             </div>
             <div className="text-center mt-8">
-              <a 
-                href="/publications" 
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              <a
+                href="/publications"
+                className="inline-block px-6 py-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-semibold hover:bg-indigo-500/25 hover:border-indigo-500/50 hover:-translate-y-0.5 transition-all duration-300"
               >
-                View All Publications
+                View All Publications →
               </a>
             </div>
           </div>
         </Section>
-        
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
+
+        {/* Research Assistant */}
+        <Section className="py-16">
           <div>
             <h2 className="text-3xl font-bold mb-2">Research Assistant</h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-              Use our AI-powered research assistant to explore my research database
-              and find relevant publications and information.
+            <p className="text-lg text-gray-400 mb-6">
+              Use the AI-powered research assistant to explore my research database and find relevant publications.
             </p>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <ResearchAssistant />
             </div>
           </div>
@@ -198,4 +207,4 @@ export default function ResearchPage() {
       </Container>
     </Layout>
   );
-} 
+}

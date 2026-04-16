@@ -2,217 +2,236 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import Container from '@/components/layout/Container';
 import Section from '@/components/layout/Section';
 import PageHeader from '@/components/layout/PageHeader';
 import Timeline from '@/components/ui/Timeline';
-import { StructureIcon, EarthquakeIcon, AIIcon } from '@/components/ui/AnimatedIcons';
+import { StructureIcon, EarthquakeIcon, AIIcon, AnalysisIcon } from '@/components/ui/AnimatedIcons';
 import Layout from '@/components/layout/LayoutFix';
 import Link from 'next/link';
 
 export default function AboutPage() {
-  // Professional expertise
   const expertise = [
     {
-      title: 'AI & Machine Learning',
-      icon: <AIIcon size={28} />,
-      description: 'Specializing in applying artificial intelligence and machine learning to structural engineering and seismic prediction challenges.',
-      skills: ['ML Algorithms (XGBoost, Random Forests)', 'LSTM Networks', 'TensorFlow', 'PyTorch', 'Keras', 'Graph Neural Networks']
+      title: 'BIM Coordination & Automation',
+      icon: <StructureIcon size={28} />,
+      description: 'Lead multidisciplinary BIM coordination for infrastructure and public-sector projects in Italy, with expertise in Revit, Navisworks, AutoCAD, Civil 3D, and Recap Pro.',
+      skills: ['Revit (LOD 200–400)', 'Navisworks Clash Detection', 'Civil 3D & Toposolid', 'Scan-to-BIM (Recap Pro + CloudCompare)', 'ISO 19650 / UNI 11337', 'BEP / Piano di Gestione Informativa']
     },
     {
       title: 'Structural Engineering',
-      icon: <StructureIcon size={28} />,
-      description: 'Expert in sustainable building engineering with focus on structural analysis and seismic resilience.',
-      skills: ['Finite Element Analysis', 'ABAQUS', 'SAP2000', 'SeismoSignal-SeismoStruct', 'Structural Vulnerability Assessment', 'BIM Modeling']
-    },
-    {
-      title: 'Seismic Analysis',
       icon: <EarthquakeIcon size={28} />,
-      description: 'Specialized knowledge in seismic hazard assessment and structural vulnerability during earthquakes.',
-      skills: ['Seismic Signal Processing', 'Geopsy (Ambient Noise Analysis)', 'QGIS-ArcGIS (Geospatial Analysis)', 'Earthquake Prediction Models', 'Building Damage Assessment']
+      description: 'Structural analysis and seismic assessment with focus on building vulnerability, foundation design, and code compliance.',
+      skills: ['ETABS (drift & lateral load)', 'SAFE (foundation design)', 'SAP2000 / ABAQUS', 'Seismic Hazard Assessment', 'Structural Vulnerability Analysis', 'Seismic Signal Processing']
     },
     {
-      title: 'Programming & Technical',
+      title: 'BIM Automation & Programming',
+      icon: <AnalysisIcon size={28} />,
+      description: 'Developer of a production-grade pyRevit BIM automation platform covering CME, AI-assisted prezzario mapping, 4D scheduling, and executive reporting.',
+      skills: ['Python (pyRevit, plugin dev)', 'Dynamo (tagging, scheduling, geometry)', 'AI-assisted prezzario mapping', 'Computo Metrico Estimativo (CME)', '4D/5D BIM workflows', 'Custom Revit family development']
+    },
+    {
+      title: 'AI & Data Science',
       icon: <AIIcon size={28} />,
-      description: 'Strong programming skills with focus on data analysis and machine learning implementation.',
-      skills: ['Python', 'NumPy', 'Pandas', 'Matplotlib', 'scikit-learn', 'AutoCAD (2D/3D)', 'Revit', 'NavisWork', 'Mathematica']
+      description: 'Applying machine learning and physics-informed AI to structural health monitoring, HVAC optimization, and seismic hazard prediction.',
+      skills: ['TensorFlow / PyTorch / Keras', 'NumPy / pandas / Matplotlib', 'scikit-learn', 'Reinforcement Learning (DDPG)', 'QGIS / ArcGIS', 'React / Three.js / JavaScript']
     }
   ];
 
-  // Education timeline
   const education = [
     {
-      year: '2024-2026',
+      year: '2024 – 2026',
       degree: 'Master in Sustainable Building Engineering',
       institution: 'Sapienza University, Rome, Italy',
-      description: 'Currently pursuing advanced studies in sustainable building engineering.',
+      description: 'Ongoing. Research focus on BIM automation, seismic resilience, and AI applications in structural engineering.',
       achievements: []
     },
     {
-      year: '2021-2024',
+      year: '2021 – 2024',
       degree: 'B.Sc. in Sustainable Building Engineering',
       institution: 'Sapienza University, Rome, Italy',
       description: 'Thesis: Seismic Hazard and Structural Vulnerability: A Study of Building Damage in the 2017 Kermanshah Earthquake',
-      achievements: ['CGPA: 3.86/4', 'GPA (Last 2-Years): 4+/4', 'Ranked 2nd among 90 Sustainable Building Engineering students', 'First of 90 students to complete the program on schedule']
+      achievements: ['CGPA: 3.86 / 4.0', 'Ranked 2nd among 90 students', 'Among the first to complete the program on schedule']
     }
   ];
 
-  // Professional timeline
   const career = [
     {
-      years: '2023 - Present',
+      years: '2025 – Present',
+      position: 'BIM Coordinator',
+      organization: 'Spoeltini Studio, Rieti, Italy',
+      description: 'Leading BIM coordination across multidisciplinary teams for major infrastructure and public-sector projects in Italy.',
+      achievements: [
+        'Led 10–15+ coordination meetings per project for Architecture, Structure, MEP, and Infrastructure teams',
+        'Identified and resolved 10–20+ clashes per project cycle using Navisworks, Revit, and MS Project; commended by SPERI management for precision',
+        'Developed high-detail Revit models at LOD 200–400 per BEP specifications',
+        'Processed point cloud data with Autodesk Recap Pro and CloudCompare for Scan-to-BIM workflows',
+        'Built custom pyRevit/Dynamo automation tools for computo metrico and quantity take-off workflows',
+        'Delivered full 4D/5D BIM on AMA Roma and Via Salaria: WBS, prezzario codes, durations, cost data linked to model elements via Shared Parameters',
+        'Selected projects: Baiano (LEONARDO), AMA Roma (SPERI), Via Salaria (SPERI), Bocconi Scuola Milano, Forze Armate Milano, Poggio Vitellino Amatrice, Municipio Roma Scuola'
+      ]
+    },
+    {
+      years: '2025 – Present',
+      position: 'BIM Coordinator — External Collaboration',
+      organization: 'SPERI S.p.A, Rome, Italy',
+      description: 'Direct collaboration with SPERI managers on major infrastructure projects requiring advanced BIM coordination support.',
+      achievements: [
+        'Supported clash detection, model validation, and multidisciplinary coordination',
+        'Contributed to Via Salaria strategic infrastructure project with SAL-based follow-up',
+        'Entrusted with projects requiring reliable, precision BIM coordination'
+      ]
+    },
+    {
+      years: '2023 – 2025',
+      position: 'BIM Coordinator & Structural Engineer',
+      organization: 'Peyvand Baft Pars, Tehran, Iran',
+      description: 'Full BIM coordination and structural engineering for a 10-story research and technology building at Vardavard Technology Park, West Tehran.',
+      achievements: [
+        'Coordinated dual-access design for two independent tenants from floor 4 upward',
+        'Produced full Revit BIM models with Shared Parameters; executed 4D/5D workflows in Navisworks',
+        'Performed ETABS drift analysis and SAFE foundation design alongside BIM coordination',
+        'Delivered final models and documentation to client in a two-person team'
+      ]
+    },
+    {
+      years: '2023 – 2026',
       position: 'Research Assistant',
-      organization: 'Sapienza University',
-      description: 'Contributing to the preparation of research reports, conference papers, and journal articles.',
-      achievements: [
-        'Developed a comprehensive framework integrating AI and ML algorithms into smart building infrastructures',
-        'Created and implemented advanced mathematical models for predictive maintenance',
-        'Designed experimental methodologies that demonstrated energy consumption reductions',
-        'Utilized Python for implementing remote structural health monitoring solutions'
-      ]
+      organization: 'Sapienza University of Rome, Italy',
+      description: 'Contributing to research reports, conference papers, and journal articles in engineering, sustainability, and digital innovation.',
+      achievements: []
     },
     {
-      years: '2025 - Present',
-      position: 'Peer Reviewer',
-      organization: 'EEEIC 2025 Conference',
-      description: 'Selected as a reviewer for the EEEIC25 (International Conference on Environment and Electrical Engineering).',
-      achievements: [
-        'Evaluating submitted research papers for acceptance or rejection',
-        'Providing critical feedback on scholarly articles'
-      ]
+      years: '2023 – 2024',
+      position: 'Peer Reviewer — EEEIC 2025 Conference',
+      organization: '',
+      description: 'Selected as a reviewer for EEEIC 2025; evaluated submitted academic papers for quality, relevance, and scientific rigor.',
+      achievements: []
     },
     {
-      years: '2020 - 2021',
+      years: '2020 – 2021',
       position: 'Education Consultant',
       organization: 'Venous Institute',
-      description: 'Worked as a Mathematics instructor and Education Consultant for people managing their educational paths.',
+      description: 'Mathematics instructor and education consultant supporting students in planning their educational paths.',
       achievements: []
     },
     {
-      years: '2017 - 2020',
+      years: '2017 – 2020',
       position: 'Architectural Designer',
       organization: '',
-      description: 'Worked on architectural design projects using AutoCAD and 3D Max software.',
+      description: 'Architectural design projects using AutoCAD and 3ds Max.',
       achievements: []
     },
     {
-      years: '2018 - 2019',
+      years: '2018 – 2019',
       position: 'Civil Engineering Intern',
-      organization: 'Khaf Steel Company',
-      description: 'Interned as a civil engineer to develop abilities and better understand career goals.',
+      organization: 'Khaf Steel Company, Iran',
+      description: 'Civil engineering internship focused on practical engineering workflows and construction environments.',
       achievements: []
     }
   ];
 
-  // Awards and recognition
   const awards = [
-    {
-      year: 2024,
-      title: 'First to Complete Sustainable Building Engineering Program on Schedule',
-      description: 'First of 90 Sustainable Building Engineering bachelor\'s students to complete the program on schedule at Sapienza University.'
-    },
-    {
-      year: 2024,
-      title: 'Ranked 2nd in Sustainable Building Engineering Program',
-      description: 'Ranked 2nd among the 90 Sustainable Building Engineering students at Sapienza University.'
-    },
-    {
-      year: 2017,
-      title: 'Outstanding Student Award',
-      description: 'Ranked 1st among 100+ students at Salam High School, Iran.'
-    },
-    {
-      year: 2017,
-      title: 'Iranian University Entrance Exam',
-      description: 'Ranked 261 out of 170,000+ participants in the Iranian University Entrance Exam.'
-    },
-    {
-      year: 2014,
-      title: 'Mathematics Olympiad Qualification',
-      description: 'Among 12,000 candidates in Iran, qualified for the first stage of the Mathematics Olympiad.'
-    }
+    { year: 2024, title: 'Ranked 2nd in Sustainable Building Engineering', description: 'Ranked 2nd among 90 Sustainable Building Engineering students at Sapienza University.' },
+    { year: 2024, title: 'First to Complete Program On Schedule', description: 'Among the first students in the program to complete the Bachelor\'s degree on schedule at Sapienza University.' },
+    { year: 2017, title: 'Outstanding Student Award', description: 'Ranked 1st among 100+ students at Salam High School, Iran.' },
+    { year: 2017, title: 'Iranian University Entrance Exam', description: 'Ranked 261 out of 170,000+ candidates in the highly competitive national exam.' },
+    { year: 2014, title: 'Mathematics Olympiad — First Stage', description: 'Qualified in the first stage of the Iranian Mathematics Olympiad among 12,000 candidates.' }
   ];
+
+  const languages = [
+    { lang: 'Persian', level: 'Native', pct: 100 },
+    { lang: 'English', level: 'Professional', pct: 90 },
+    { lang: 'Italian', level: 'A2 — In Progress', pct: 30 },
+    { lang: 'French', level: 'Basic', pct: 15 },
+  ];
+
+  const fade = (delay = 0) => ({ initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.5, delay }, viewport: { once: true } });
 
   return (
     <Layout>
       <PageHeader
         title="About Me"
-        subtitle="Sustainable Building Engineer, Seismic Specialist, and AI Innovator"
+        subtitle="BIM Coordinator · BIM Automation Engineer · Structural Engineer · Sapienza University Research Assistant"
         imageUrl="/assets/images/about-header.jpg"
       />
 
       <Container>
+        {/* ── Bio ── */}
         <Section>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <motion.div {...fade()}>
               <h2 className="text-3xl font-bold mb-6">Professional Background</h2>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                I am a sustainable building engineer specializing in the integration of artificial intelligence with structural analysis and seismic engineering. Currently pursuing a Master's degree at Sapienza University in Rome, my work focuses on innovative approaches to structural resilience and seismic hazard prediction.
+              <p className="text-gray-300 mb-4">
+                BIM Coordinator with hands-on experience in large-scale infrastructure, public, and building projects in Italy,
+                collaborating with <strong className="text-indigo-300">SPERI S.p.A</strong> and{' '}
+                <strong className="text-indigo-300">Spoeltini Studio</strong>. Specialized in multidisciplinary coordination
+                across Architecture, Structure, MEP, and Infrastructure, with advanced expertise in clash detection,
+                model development, and BIM-based workflows.
               </p>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                My research integrates AI and ML algorithms into smart building infrastructures to optimize energy efficiency and structural health monitoring. My work bridges the gap between traditional structural engineering principles and cutting-edge machine learning techniques.
+              <p className="text-gray-300 mb-4">
+                Developer of a production-grade{' '}
+                <strong className="text-cyan-300">BIM Automation Platform</strong> (pyRevit-based) covering automated
+                CME/computo metrico, AI-assisted prezzario mapping, 4D scheduling, cost-carbon tracking, and
+                tender-grade reporting — reducing a process that took up to one week to under one day.
               </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                I am particularly focused on ML algorithms for predicting seismic hazards, AI applications in structural health monitoring, and integrating BIM with smart monitoring systems.
+              <p className="text-gray-300">
+                Master's student at <strong className="text-indigo-300">Sapienza University of Rome</strong>,
+                active researcher, peer reviewer for EEEIC 2025, and web developer with delivered projects for
+                engineering and architecture firms.
               </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {['Revit', 'Navisworks', 'Civil 3D', 'Python', 'Dynamo', 'ETABS', 'SAFE', 'ISO 19650'].map(s => (
+                  <span key={s} className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 border border-indigo-500/25 text-indigo-300">{s}</span>
+                ))}
+              </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative h-[500px] rounded-lg overflow-hidden shadow-xl"
-            >
-              <Image
-                src="/assets/images/dr-hedayat-profile.jpg"
-                alt="My Profile Photo"
-                fill
-                style={{ objectFit: 'cover' }}
-                className="rounded-lg"
-              />
+            <motion.div {...fade(0.2)} className="glass-panel rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Languages</h3>
+              <div className="space-y-4">
+                {languages.map(l => (
+                  <div key={l.lang}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-semibold text-white">{l.lang}</span>
+                      <span className="text-gray-400">{l.level}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style={{ width: `${l.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-5 border-t border-white/5">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Location</h3>
+                <p className="text-gray-300">📍 Rieti, Italy</p>
+              </div>
             </motion.div>
           </div>
         </Section>
 
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
+        {/* ── Expertise ── */}
+        <Section className="py-16">
           <h2 className="text-3xl font-bold mb-10 text-center">Areas of Expertise</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {expertise.map((area, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md h-full"
-              >
-                <div className="text-blue-600 dark:text-blue-400 mb-4">
-                  {area.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-3">{area.title}</h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  {area.description}
-                </p>
-                <div>
-                  <h4 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Key Skills
-                  </h4>
-                  <ul className="list-disc pl-5 text-gray-700 dark:text-gray-300 text-sm space-y-1">
-                    {area.skills.map((skill, i) => (
-                      <li key={i}>{skill}</li>
-                    ))}
-                  </ul>
-                </div>
+            {expertise.map((area, i) => (
+              <motion.div key={i} {...fade(i * 0.1)} className="glass-panel glass-panel-hover rounded-2xl p-6">
+                <div className="text-indigo-400 mb-4">{area.icon}</div>
+                <h3 className="text-lg font-bold mb-2 text-white">{area.title}</h3>
+                <p className="text-gray-400 text-sm mb-4">{area.description}</p>
+                <ul className="space-y-1">
+                  {area.skills.map((s, j) => (
+                    <li key={j} className="flex items-start gap-2 text-xs text-gray-400">
+                      <span className="mt-1.5 w-1 h-1 rounded-full bg-indigo-400 flex-shrink-0" />{s}
+                    </li>
+                  ))}
+                </ul>
               </motion.div>
             ))}
           </div>
         </Section>
 
+        {/* ── Education ── */}
         <Section>
           <h2 className="text-3xl font-bold mb-8">Education</h2>
           <Timeline items={education.map(edu => ({
@@ -221,23 +240,19 @@ export default function AboutPage() {
             subtitle: edu.institution,
             content: (
               <div>
-                <p className="mb-2">{edu.description}</p>
+                <p className="mb-2 text-gray-300">{edu.description}</p>
                 {edu.achievements.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-1">Achievements</h4>
-                    <ul className="list-disc pl-5 text-sm">
-                      {edu.achievements.map((achievement, i) => (
-                        <li key={i}>{achievement}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="list-disc pl-5 text-sm text-gray-400 space-y-1 mt-2">
+                    {edu.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                  </ul>
                 )}
               </div>
             )
           }))} />
         </Section>
 
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
+        {/* ── Career ── */}
+        <Section className="py-16">
           <h2 className="text-3xl font-bold mb-8">Professional Experience</h2>
           <Timeline items={career.map(exp => ({
             time: exp.years,
@@ -245,64 +260,49 @@ export default function AboutPage() {
             subtitle: exp.organization,
             content: (
               <div>
-                <p className="mb-2">{exp.description}</p>
+                <p className="mb-2 text-gray-300">{exp.description}</p>
                 {exp.achievements.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-1">Key Accomplishments</h4>
-                    <ul className="list-disc pl-5 text-sm">
-                      {exp.achievements.map((achievement, i) => (
-                        <li key={i}>{achievement}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="list-disc pl-5 text-sm text-gray-400 space-y-1 mt-2">
+                    {exp.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                  </ul>
                 )}
               </div>
             )
           }))} />
         </Section>
 
+        {/* ── Awards ── */}
         <Section>
-          <h2 className="text-3xl font-bold mb-8">Awards & Recognition</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {awards.map((award, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                viewport={{ once: true }}
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-start">
-                  <div className="bg-blue-100 dark:bg-blue-900 rounded-full px-3 py-1 text-blue-800 dark:text-blue-200 font-semibold mr-3">
-                    {award.year}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">{award.title}</h3>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      {award.description}
-                    </p>
-                  </div>
+          <h2 className="text-3xl font-bold mb-8">Honors & Awards</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {awards.map((award, i) => (
+              <motion.div key={i} {...fade(i * 0.07)} className="glass-panel rounded-xl p-5 flex items-start gap-4">
+                <div className="px-3 py-1.5 rounded-lg text-xs font-black text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 flex-shrink-0">{award.year}</div>
+                <div>
+                  <h3 className="font-bold text-white mb-1">{award.title}</h3>
+                  <p className="text-gray-400 text-sm">{award.description}</p>
                 </div>
               </motion.div>
             ))}
           </div>
         </Section>
 
-        <Section className="bg-gray-50 dark:bg-gray-900 py-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">Get in Touch</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-8">
-              I welcome collaboration opportunities, speaking engagements, and consultation requests. I am also actively looking for motivated graduate students interested in structural engineering and AI research.
+        {/* ── CTA ── */}
+        <Section className="py-16">
+          <div className="glass-panel rounded-3xl p-12 text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4 text-white">Get in Touch</h2>
+            <p className="text-gray-400 mb-8">
+              I welcome collaboration on BIM coordination, structural engineering research, and AI-driven engineering automation.
             </p>
-            <div className="mt-6">
-              <Link href="/contact" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
-                Contact Me
-              </Link>
-            </div>
+            <Link
+              href="/contact"
+              className="px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_35px_rgba(99,102,241,0.6)] hover:bg-indigo-500 hover:-translate-y-1 transition-all duration-300 inline-block"
+            >
+              Contact Me
+            </Link>
           </div>
         </Section>
       </Container>
     </Layout>
   );
-} 
+}

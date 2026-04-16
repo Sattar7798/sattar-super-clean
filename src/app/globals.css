@@ -2,236 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom animations */
-@keyframes blob {
-  0% {
-    transform: scale(1) translate(0px, 0px);
+@layer base {
+  body {
+    background-color: #050e1f;
+    color: #f0f6ff;
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   }
-  33% {
-    transform: scale(1.1) translate(30px, -50px);
+  ::selection { background: #6366f1; color: white; }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(13, 31, 60, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
   }
-  66% {
-    transform: scale(0.9) translate(-20px, 20px);
-  }
-  100% {
-    transform: scale(1) translate(0px, 0px);
-  }
-}
 
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-    filter: brightness(1);
+  .glass-panel-hover {
+    transition: all 0.3s ease;
   }
-  50% {
-    opacity: 0.8;
-    filter: brightness(1.2);
+  .glass-panel-hover:hover {
+    background: rgba(13, 31, 60, 0.8);
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 8px 40px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+    transform: translateY(-6px);
   }
-}
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
-  50% {
-    transform: translateY(-10px);
+  .text-gradient-neon {
+    background-image: linear-gradient(135deg, #a5b4fc 0%, #22d3ee 50%, #34d399 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
-}
 
-@keyframes spin-slow {
-  0% {
-    transform: rotate(0deg);
+  .glow-indigo {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.45), 0 0 60px rgba(99, 102, 241, 0.15);
   }
-  100% {
-    transform: rotate(360deg);
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.45), 0 0 60px rgba(34, 211, 238, 0.15);
   }
 }
 
-/* Animation utilities */
-.animate-blob {
-  animation: blob 7s infinite alternate;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #050e1f; }
+::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
-}
+html { scroll-behavior: smooth; }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Custom styles for 3D components */
 .canvas-container {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(99, 102, 241, 0.15);
 }
 
 .loading-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
+  backdrop-filter: blur(8px);
   z-index: 10;
+  background: rgba(5, 14, 31, 0.8);
 }
 
-/* Responsive text utilities */
-@layer utilities {
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r;
-  }
-  
-  .text-gradient-blue {
-    @apply text-gradient from-blue-500 to-purple-600;
-  }
-  
-  .text-gradient-green {
-    @apply text-gradient from-green-400 to-blue-500;
-  }
-}
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+.seismic-card { position: relative; }
 
-/* Container styles */
-.container {
-  @apply px-4 mx-auto;
-  max-width: 1280px;
+/* Range input — dark styled */
+input[type='range'] {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(99,102,241,0.2);
+  outline: none;
 }
-
-/* Focus styles */
-*:focus-visible {
-  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(99,102,241,0.5);
+  border: 2px solid rgba(255,255,255,0.2);
 }
-
-/* Accessibility */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2);
 }
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Base styles */
-body {
-  @apply bg-white text-gray-900 font-sans;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Transition utilities */
-.transition-all-300 {
-  transition: all 0.3s ease;
-}
-
-.transition-transform-300 {
-  transition: transform 0.3s ease;
-}
-
-/* Card hover effect */
-.card-hover {
-  @apply transition-all duration-300;
-}
-
-.card-hover:hover {
-  @apply transform -translate-y-1 shadow-lg;
-}
-
-/* Custom styles */
-.seismic-card {
-  position: relative;
-}
-
-.seismic-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.seismic-card h3::before, 
-.seismic-card h3::after {
-  content: none !important;
-}
-
-/* Remove black overlay that appears on the Seismic Analysis card */
-.seismic-card h3 {
-  background: transparent !important;
-  position: relative;
-}
-
-/* Additional fixes for the black overlay */
-.seismic-card h3::before,
-.seismic-card h3::after {
-  display: none !important;
-  content: none !important;
-  opacity: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* Ensure the heading text is visible */
-.seismic-card h3 span {
-  position: relative;
-  z-index: 20;
-  background: transparent;
-}
-
-/* Target specific black bar overlay */
-div[class^="research-area"] h3::before,
-div[class*=" research-area"] h3::before,
-.seismic-card h3::before {
-  display: none !important;
-  height: 0 !important;
-  background: transparent !important;
-} 

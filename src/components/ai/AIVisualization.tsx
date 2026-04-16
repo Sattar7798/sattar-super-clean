@@ -1,410 +1,308 @@
 'use client';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ChartData } from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
+/* ─────────────────────────────────────────────────────────────────────────────
+   AI VISUALIZATION — Dark glass neural network + structural risk panel
+─────────────────────────────────────────────────────────────────────────────── */
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+interface AIVisualizationProps { className?: string; }
 
-interface AIVisualizationProps {
-  className?: string;
-  height?: number;
-  initialModelType?: string;
-}
-
-// Type definitions for visualization data
-interface DataPoint {
-  label: string;
-  value: number;
-  color: string;
-}
-
-// Sample data
-const structuralData: DataPoint[] = [
-  { label: 'Displacement', value: 24.3, color: '#3B82F6' },
-  { label: 'Mean Absolute Error', value: 1.83, color: '#10B981' },
-  { label: 'R² Score', value: 0.92, color: '#6366F1' },
-  { label: 'Max Stress', value: 18.7, color: '#F59E0B' },
-  { label: 'Damping Factor', value: 0.65, color: '#EC4899' }
+// ── Structural features ───────────────────────────────────────────────────────
+const FEATURES = [
+  { name: 'Foundation Integrity', score: 0.95, status: 'safe' as const },
+  { name: 'Beam-Column Joints', score: 0.72, status: 'warning' as const },
+  { name: 'Lateral Resistance', score: 0.88, status: 'safe' as const },
+  { name: 'Floor Diaphragm', score: 0.93, status: 'safe' as const },
+  { name: 'Steel Reinforcement', score: 0.58, status: 'critical' as const },
+  { name: 'Ductility Demand', score: 0.79, status: 'warning' as const },
+  { name: 'Shear Wall Capacity', score: 0.91, status: 'safe' as const },
+  { name: 'Connection Details', score: 0.64, status: 'critical' as const },
+  { name: 'Foundation Depth', score: 0.97, status: 'safe' as const },
 ];
 
-// Feature analysis data
-const features = [
-  { name: 'Foundation Integrity', confidence: 0.95, status: 'normal' },
-  { name: 'Beam-Column Connection', confidence: 0.72, status: 'warning' },
-  { name: 'Lateral Load Resistance', confidence: 0.88, status: 'normal' },
-  { name: 'Floor Diaphragm Performance', confidence: 0.93, status: 'normal' },
-  { name: 'Steel Reinforcement Adequacy', confidence: 0.65, status: 'critical' }
-];
-
-// Time series data for prediction visualization
-const timeSeriesData = {
-  labels: ['0s', '1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s'],
-  datasets: [
-    {
-      label: 'Actual Response',
-      data: [0, 5, 15, 22, 18, 12, 5, -2, -8, -4, 0],
-      borderColor: '#3B82F6',
-      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-      borderWidth: 2,
-      tension: 0.4,
-    },
-    {
-      label: 'AI Prediction',
-      data: [0, 4, 13, 24, 20, 13, 6, -1, -7, -5, 0],
-      borderColor: '#F59E0B',
-      backgroundColor: 'rgba(245, 158, 11, 0.2)',
-      borderWidth: 2,
-      borderDash: [5, 5],
-      tension: 0.4,
-    }
-  ]
+const STATUS_STYLES = {
+  safe:     { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)' },
+  warning:  { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' },
+  critical: { color: '#fb7185', bg: 'rgba(251,113,133,0.1)', border: 'rgba(251,113,133,0.25)' },
 };
 
-// Bar chart data
-const performanceData = {
-  labels: structuralData.map(d => d.label),
-  datasets: [
-    {
-      label: 'Values',
-      data: structuralData.map(d => d.value),
-      backgroundColor: structuralData.map(d => d.color),
-      borderWidth: 1,
-    }
-  ]
-};
+// ── Neural network layer definitions ─────────────────────────────────────────
+const LAYERS = [4, 6, 8, 6, 3]; // nodes per layer
 
-const AIVisualization: React.FC<AIVisualizationProps> = ({ 
-  className = '',
-  height = 600,
-  initialModelType = 'displacement'
-}) => {
-  const [viewMode, setViewMode] = useState<'chart' | 'heatmap' | 'timeseries'>('chart');
-  const [smoothing, setSmoothing] = useState(50);
-  const [confidence, setConfidence] = useState(85);
-  const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("Initializing component");
-  const [modelType, setModelType] = useState(initialModelType);
-  const [renderAttempts, setRenderAttempts] = useState(0);
-  const chartRef = useRef<HTMLDivElement>(null);
+// ── Time-series response data ─────────────────────────────────────────────────
+const ACTUAL_DATA = [0, 4.2, 11, 19.8, 22.1, 17.3, 10.5, 3.1, -5.2, -10.1, -7.4, -3.1, 1.2, 4.8, 3.5, 1.1, -0.8, -1.5, -0.6, 0, 0.3, 0.1, 0];
+const PREDICT_DATA = [0, 3.8, 10.2, 20.5, 23.0, 18.1, 11.2, 3.9, -4.8, -9.5, -7.0, -2.8, 1.4, 5.1, 3.9, 1.3, -0.5, -1.3, -0.5, 0.2, 0.4, 0.2, 0];
 
-  // Client-side rendering check
+const AIVisualization: React.FC<AIVisualizationProps> = ({ className = '' }) => {
+  const [activePulse, setActivePulse] = useState(0);
+  const [smoothing, setSmoothing] = useState(60);
+  const [confidence, setConfidence] = useState(88);
+  const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
+  const [modelType, setModelType] = useState<'displacement'|'stress'|'seismic'|'vibration'>('seismic');
+  const chartCanvasRef = useRef<HTMLCanvasElement>(null);
+  const nnCanvasRef = useRef<HTMLCanvasElement>(null);
+  const pulseRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Animate neural network pulses
   useEffect(() => {
-    setIsClient(true);
-    setDebugInfo("Component mounted on client side");
-    setRenderAttempts(prev => prev + 1);
+    pulseRef.current = setInterval(() => {
+      setActivePulse(p => (p + 1) % (LAYERS.length + 2));
+    }, 300);
+    return () => { if (pulseRef.current) clearInterval(pulseRef.current); };
   }, []);
 
-  // Debug effect to track chart container dimensions
-  useEffect(() => {
-    if (chartRef.current) {
-      const { width, height } = chartRef.current.getBoundingClientRect();
-      setDebugInfo(`Chart container: ${width}px × ${height}px, Render attempts: ${renderAttempts}`);
-    }
-  }, [chartRef, renderAttempts]);
+  // ── Draw Neural Network ─────────────────────────────────────────────────────
+  const drawNN = useCallback(() => {
+    const canvas = nnCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
 
-  // Fallback content for server-side rendering
-  if (!isClient) {
-    return (
-      <div className="bg-yellow-100 border-2 border-yellow-400 p-4 rounded-lg text-center min-h-[300px] flex flex-col justify-center items-center">
-        <p className="text-lg font-bold text-yellow-800 mb-2">Loading Visualization...</p>
-        <p className="text-sm text-yellow-700">The visualization will appear once JavaScript is fully loaded.</p>
-        <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mt-4"></div>
-      </div>
-    );
-  }
+    const layerXs = LAYERS.map((_, i) => (i + 1) * w / (LAYERS.length + 1));
+
+    // Draw connections
+    LAYERS.forEach((nodeCount, li) => {
+      if (li === LAYERS.length - 1) return;
+      const nextCount = LAYERS[li + 1];
+      const x1 = layerXs[li], x2 = layerXs[li + 1];
+      for (let ni = 0; ni < nodeCount; ni++) {
+        const y1 = (ni + 1) * h / (nodeCount + 1);
+        for (let nj = 0; nj < nextCount; nj++) {
+          const y2 = (nj + 1) * h / (nextCount + 1);
+          const isActive = li === activePulse - 1;
+          const alpha = isActive ? 0.55 : 0.08;
+          const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+          grad.addColorStop(0, `rgba(99,102,241,${alpha})`);
+          grad.addColorStop(1, `rgba(34,211,238,${alpha})`);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = isActive ? 1.5 : 0.7;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+      }
+    });
+
+    // Draw nodes
+    LAYERS.forEach((nodeCount, li) => {
+      const x = layerXs[li];
+      for (let ni = 0; ni < nodeCount; ni++) {
+        const y = (ni + 1) * h / (nodeCount + 1);
+        const isActive = li === activePulse;
+        const r = isActive ? 7 : 5;
+        const baseColor = li === 0 ? '#22d3ee' : li === LAYERS.length - 1 ? '#34d399' : '#a5b4fc';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isActive ? baseColor : `${baseColor}55`;
+        if (isActive) { ctx.shadowBlur = 14; ctx.shadowColor = baseColor; }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    });
+  }, [activePulse]);
+
+  useEffect(() => { drawNN(); }, [drawNN]);
+
+  // ── Draw Time-Series Chart ──────────────────────────────────────────────────
+  const drawChart = useCallback(() => {
+    const canvas = chartCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const tension = smoothing / 100;
+    const band = (confidence / 100) * 6;
+    const maxVal = 26;
+
+    // Grid
+    for (let i = 0; i <= 4; i++) {
+      const y = (i / 4) * (h - 30) + 15;
+      ctx.strokeStyle = 'rgba(99,102,241,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w - 10, y); ctx.stroke();
+    }
+
+    const toX = (i: number) => 30 + (i / (ACTUAL_DATA.length - 1)) * (w - 40);
+    const toY = (v: number) => h/2 - 15 - (v / maxVal) * (h/2 - 20);
+
+    // Confidence band
+    ctx.beginPath();
+    PREDICT_DATA.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v + band)) : ctx.lineTo(toX(i), toY(v + band)));
+    PREDICT_DATA.slice().reverse().forEach((v, i) => ctx.lineTo(toX(PREDICT_DATA.length - 1 - i), toY(v - band)));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(251,113,133,0.07)';
+    ctx.fill();
+
+    // Actual line
+    ctx.beginPath();
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 2;
+    ACTUAL_DATA.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.stroke();
+
+    // Prediction line (dashed)
+    ctx.beginPath();
+    ctx.strokeStyle = '#fb7185';
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([5, 4]);
+    PREDICT_DATA.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Zero line
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(30, toY(0)); ctx.lineTo(w - 10, toY(0)); ctx.stroke();
+
+    // Legend
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillText('Actual Response', 35, 14);
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText('AI Prediction', 35 + 110, 14);
+  }, [smoothing, confidence]);
+
+  useEffect(() => { drawChart(); }, [drawChart]);
+
+  const overallScore = Math.round(FEATURES.reduce((a, f) => a + f.score, 0) / FEATURES.length * 100);
+  const criticalCount = FEATURES.filter(f => f.status === 'critical').length;
 
   return (
-    <div 
-      className={`bg-white shadow-lg border-2 border-blue-200 rounded-lg overflow-hidden ${className}`}
-      style={{ minHeight: `${height}px` }}
-    >
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-blue-800">AI Structural Analysis Visualization</h2>
-        
-        {/* Debug info - useful during development */}
-        <div className="bg-gray-100 border border-gray-300 p-2 mb-4 rounded-md">
-          <p className="text-xs text-gray-700">Debug: {debugInfo}</p>
+    <div className={`flex flex-col gap-4 ${className}`}>
+
+      {/* ── Header row ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        {(['displacement','stress','seismic','vibration'] as const).map(t => (
+          <button key={t} onClick={() => setModelType(t)}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize border transition-all ${modelType === t ? 'bg-indigo-600/30 border-indigo-500/40 text-indigo-300' : 'border-white/5 text-gray-500 hover:border-white/10 hover:text-gray-300'}`}
+          >{t} Analysis</button>
+        ))}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-xs text-gray-500">Model Online</span>
         </div>
-        
-        {/* Model type selector */}
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-2">Analysis Type:</h3>
-          <div className="flex flex-wrap gap-2">
-            {['displacement', 'stress', 'seismic', 'vibration'].map(type => (
-              <button
-                key={type}
-                onClick={() => {
-                  setModelType(type);
-                  setDebugInfo(`Changed model type to ${type}`);
-                }}
-                className={`py-2 px-4 rounded-lg capitalize ${
-                  modelType === type 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+      </div>
+
+      {/* ── 3-panel grid ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        {/* Panel 1: Structural Risk Heatmap */}
+        <div className="glass-panel rounded-xl p-4">
+          <div className="text-xs font-bold text-white mb-3 uppercase tracking-widest">Risk Heatmap</div>
+          <div className="grid grid-cols-3 gap-2">
+            {FEATURES.map((f, i) => {
+              const st = STATUS_STYLES[f.status];
+              const isSelected = selectedFeature === i;
+              return (
+                <button key={i} onClick={() => setSelectedFeature(isSelected ? null : i)}
+                  className="p-2 rounded-xl text-center transition-all cursor-pointer"
+                  style={{ background: isSelected ? st.bg : 'rgba(255,255,255,0.03)', border: `1px solid ${isSelected ? st.color : st.border}`, boxShadow: isSelected ? `0 0 12px ${st.color}40` : 'none' }}
+                >
+                  <div className="text-[9px] text-gray-400 leading-tight mb-1">{f.name}</div>
+                  <div className="text-sm font-black font-mono" style={{ color: st.color }}>{Math.round(f.score * 100)}%</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected feature detail */}
+          <AnimatePresence>
+            {selectedFeature !== null && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="mt-3 p-3 rounded-xl overflow-hidden"
+                style={{ background: STATUS_STYLES[FEATURES[selectedFeature].status].bg, border: `1px solid ${STATUS_STYLES[FEATURES[selectedFeature].status].border}` }}
               >
-                {type}
-              </button>
+                <div className="text-xs font-bold mb-1" style={{ color: STATUS_STYLES[FEATURES[selectedFeature].status].color }}>
+                  {FEATURES[selectedFeature].name}
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${FEATURES[selectedFeature].score * 100}%`, background: STATUS_STYLES[FEATURES[selectedFeature].status].color }} />
+                </div>
+                <div className="text-[10px] text-gray-500 mt-1.5">
+                  {FEATURES[selectedFeature].status === 'safe' ? '✓ Within expected parameters.' : FEATURES[selectedFeature].status === 'warning' ? '⚠ Requires monitoring.' : '✕ Critical — immediate action needed.'}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Summary */}
+          <div className="mt-4 pt-3 border-t border-white/5 flex justify-between items-center">
+            <div>
+              <div className="text-lg font-black font-mono text-white">{overallScore}<span className="text-xs text-gray-500 ml-1">/ 100</span></div>
+              <div className="text-[10px] text-gray-500">Structural Score</div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-black font-mono" style={{ color: criticalCount > 1 ? '#fb7185' : '#fbbf24' }}>{criticalCount}</div>
+              <div className="text-[10px] text-gray-500">Critical Issues</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 2: Neural Network */}
+        <div className="glass-panel rounded-xl p-4">
+          <div className="text-xs font-bold text-white mb-3 uppercase tracking-widest">Neural Network</div>
+          <canvas ref={nnCanvasRef} width={340} height={220} style={{ width: '100%', height: '220px', display: 'block' }} />
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            {[
+              { label: 'Layers', value: LAYERS.length },
+              { label: 'Parameters', value: '18.4K' },
+              { label: 'Accuracy', value: `${confidence}%` },
+            ].map(s => (
+              <div key={s.label} className="rounded-lg py-2" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                <div className="text-sm font-black text-indigo-300 font-mono">{s.value}</div>
+                <div className="text-[9px] text-gray-500">{s.label}</div>
+              </div>
             ))}
           </div>
-        </div>
-        
-        {/* View mode toggle */}
-        <div className="flex flex-wrap mb-6 gap-2">
-          <button 
-            onClick={() => {
-              setViewMode('chart');
-              setDebugInfo("Changed to chart view");
-            }}
-            className={`py-2 px-4 rounded-lg ${viewMode === 'chart' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            Chart View
-          </button>
-          <button 
-            onClick={() => {
-              setViewMode('heatmap');
-              setDebugInfo("Changed to heatmap view");
-            }}
-            className={`py-2 px-4 rounded-lg ${viewMode === 'heatmap' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            Heatmap View
-          </button>
-          <button 
-            onClick={() => {
-              setViewMode('timeseries');
-              setDebugInfo("Changed to time series view");
-            }}
-            className={`py-2 px-4 rounded-lg ${viewMode === 'timeseries' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-          >
-            Time Series
-          </button>
-        </div>
-        
-        {/* Controls */}
-        <div className="mb-8 space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Smoothing:</label>
-            <div className="flex items-center">
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={smoothing} 
-                onChange={(e) => {
-                  const newValue = parseInt(e.target.value);
-                  setSmoothing(newValue);
-                  setDebugInfo(`Smoothing changed to ${newValue}`);
-                }} 
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <span className="ml-2 text-sm text-gray-500 min-w-[40px] text-right">{smoothing}%</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confidence:</label>
-            <div className="flex items-center">
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={confidence} 
-                onChange={(e) => {
-                  const newValue = parseInt(e.target.value);
-                  setConfidence(newValue);
-                  setDebugInfo(`Confidence changed to ${newValue}`);
-                }} 
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <span className="ml-2 text-sm text-gray-500 min-w-[40px] text-right">{confidence}%</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Visualization with fallback */}
-        <div 
-          ref={chartRef}
-          className="bg-gray-100 p-4 rounded-lg mb-6 border border-gray-200"
-          style={{ minHeight: '350px' }}
-        >
-          {viewMode === 'chart' && (
-            <div className="h-80">
-              <div className="h-full w-full">
-                <Bar 
-                  data={performanceData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                      title: {
-                        display: true,
-                        text: `${modelType.charAt(0).toUpperCase() + modelType.slice(1)} Analysis Results`,
-                      },
-                    },
-                  }}
-                />
+
+          <div className="mt-4 space-y-3">
+            <div>
+              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                <span>Smoothing</span><span className="text-indigo-300 font-mono">{smoothing}%</span>
               </div>
+              <input type="range" min={0} max={100} value={smoothing} onChange={e => setSmoothing(Number(e.target.value))}
+                className="w-full" style={{ background: `linear-gradient(to right, #6366f1 ${smoothing}%, rgba(99,102,241,0.2) 0%)` }} />
             </div>
-          )}
-          
-          {viewMode === 'timeseries' && (
-            <div className="h-80">
-              <div className="h-full w-full">
-                <Line 
-                  data={timeSeriesData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: 'Structural Response Over Time',
-                      },
-                    },
-                    scales: {
-                      y: {
-                        title: {
-                          display: true,
-                          text: 'Displacement (mm)',
-                        }
-                      },
-                      x: {
-                        title: {
-                          display: true,
-                          text: 'Time',
-                        }
-                      }
-                    }
-                  }}
-                />
+            <div>
+              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                <span>Confidence Band</span><span className="text-cyan-300 font-mono">{confidence}%</span>
               </div>
+              <input type="range" min={50} max={99} value={confidence} onChange={e => setConfidence(Number(e.target.value))}
+                className="w-full" style={{ background: `linear-gradient(to right, #22d3ee ${((confidence - 50)/49)*100}%, rgba(34,211,238,0.2) 0%)` }} />
             </div>
-          )}
-          
-          {viewMode === 'heatmap' && (
-            <div className="h-80 flex items-center justify-center">
-              {/* Simple heatmap visualization */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full max-w-md mx-auto">
-                {features.map((feature, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-lg flex items-center justify-center cursor-pointer shadow-md
-                      ${feature.status === 'normal' 
-                        ? 'bg-green-100 border-green-400' 
-                        : feature.status === 'warning'
-                          ? 'bg-yellow-100 border-yellow-400'
-                          : 'bg-red-100 border-red-400'
-                      } border-2 hover:brightness-95`}
-                    onClick={() => {
-                      setSelectedFeature(feature.name);
-                      setDebugInfo(`Selected feature: ${feature.name}`);
-                    }}
-                  >
-                    <div className="text-center p-1">
-                      <div className="text-xs font-semibold mb-1">{feature.name}</div>
-                      <div className={`text-sm font-bold ${
-                        feature.confidence > 0.8 
-                          ? 'text-green-700' 
-                          : feature.confidence > 0.7 
-                            ? 'text-yellow-700' 
-                            : 'text-red-700'
-                      }`}>
-                        {Math.round(feature.confidence * 100)}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg shadow border border-blue-100">
-            <div className="text-sm text-gray-500">Max Displacement</div>
-            <div className="text-xl font-bold text-blue-700">24.3 <span className="text-sm font-normal">mm</span></div>
-            <div className="text-xs text-gray-500">AI prediction accuracy: 92.5%</div>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg shadow border border-blue-100">
-            <div className="text-sm text-gray-500">Mean Absolute Error</div>
-            <div className="text-xl font-bold text-blue-700">1.83 <span className="text-sm font-normal">mm</span></div>
-            <div className="text-xs text-gray-500">Based on 500+ simulations</div>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg shadow border border-blue-100">
-            <div className="text-sm text-gray-500">R² Score</div>
-            <div className="text-xl font-bold text-blue-700">0.92</div>
-            <div className="text-xs text-gray-500">Model performance indicator</div>
           </div>
         </div>
-        
-        {/* Feature detail panel - shows when a feature is selected */}
-        {selectedFeature && (
-          <motion.div 
-            className="mt-6 p-4 bg-white border border-gray-300 rounded-lg shadow-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-bold text-gray-900">{selectedFeature} Analysis</h3>
-              <button 
-                onClick={() => setSelectedFeature(null)} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Detailed analysis of {selectedFeature.toLowerCase()} shows structural performance is 
-              {features.find(f => f.name === selectedFeature)?.status === 'normal' 
-                ? ' within expected parameters.' 
-                : features.find(f => f.name === selectedFeature)?.status === 'warning'
-                  ? ' showing signs of potential weakness.' 
-                  : ' indicating critical issues that need attention.'}
-            </p>
-            <div className="flex justify-center">
-              <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${
-                    features.find(f => f.name === selectedFeature)?.status === 'normal'
-                      ? 'bg-green-500'
-                      : features.find(f => f.name === selectedFeature)?.status === 'warning'
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                  }`}
-                  style={{ 
-                    width: `${(features.find(f => f.name === selectedFeature)?.confidence || 0) * 100}%`
-                  }}
-                ></div>
+
+        {/* Panel 3: Time Series */}
+        <div className="glass-panel rounded-xl p-4">
+          <div className="text-xs font-bold text-white mb-3 uppercase tracking-widest">Response Prediction</div>
+          <canvas ref={chartCanvasRef} width={340} height={220} style={{ width: '100%', height: '220px', display: 'block' }} />
+
+          <div className="mt-3 space-y-2">
+            {[
+              { label: 'MAE', value: (1.83 * (1 - smoothing / 200)).toFixed(2), unit: 'mm', color: '#34d399' },
+              { label: 'R² Score', value: (0.85 + confidence / 1000).toFixed(3), unit: '', color: '#22d3ee' },
+              { label: 'Max Predicted Δ', value: '23.0', unit: 'mm', color: '#fb7185' },
+            ].map(m => (
+              <div key={m.label} className="flex justify-between items-center py-1.5 px-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <span className="text-[10px] text-gray-400">{m.label}</span>
+                <span className="font-mono text-sm font-bold" style={{ color: m.color }}>{m.value}<span className="text-[10px] text-gray-500 ml-1">{m.unit}</span></span>
               </div>
-            </div>
-          </motion.div>
-        )}
+            ))}
+          </div>
+
+          <div className="mt-3 p-3 rounded-xl text-[10px] text-gray-400 leading-relaxed"
+            style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.12)' }}>
+            <span className="text-rose-400 font-semibold">AI Insight: </span>
+            The {modelType} model predicts potential resonance effects at higher floors. Recommend increasing damping or installing tuned mass dampers.
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AIVisualization; 
+export default AIVisualization;

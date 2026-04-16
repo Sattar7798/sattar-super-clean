@@ -1,1178 +1,568 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
+'use client';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+/* ─────────────────────────────────────────────────────────────────────────────
+   SEISMIC VISUALIZATION — SDOF Newmark-β Physics Engine
+   ─────────────────────────────────────────────────────────────────────────────
+   Features:
+   • Newmark-β (average acceleration) numerical integration of SDOF equation
+   • Kanai-Tajimi stochastic ground motion generation
+   • Per-floor drift heatmap (green→yellow→orange→red based on drift ratio)
+   • 5 interactive controls with instant physics feedback
+   • Styled for dark theme with indigo/cyan accent palette
+─────────────────────────────────────────────────────────────────────────────── */
+
+// ── Soil amplification table (EC8 site classes) ──────────────────────────────
+const SOIL_TABLE: Record<string, { label: string; S: number; Tb: number; Tc: number; Td: number; color: string }> = {
+  A: { label: 'Rock (Class A)', S: 1.0, Tb: 0.15, Tc: 0.4, Td: 2.0, color: '#34d399' },
+  B: { label: 'Stiff Soil (B)', S: 1.2, Tb: 0.15, Tc: 0.5, Td: 2.0, color: '#22d3ee' },
+  C: { label: 'Medium Soil (C)', S: 1.15, Tb: 0.20, Tc: 0.6, Td: 2.0, color: '#fb923c' },
+  D: { label: 'Soft Soil (D)', S: 1.35, Tb: 0.20, Tc: 0.8, Td: 2.0, color: '#fb7185' },
+};
+
+const CODE_DRIFT_LIMIT = 0.025; // 2.5% drift ratio limit (EC8 life safety)
+const NUM_FLOORS = 10;
+const FLOOR_HEIGHT_M = 3.0;
+const DT = 0.005; // simulation time step (seconds)
+const SIM_DURATION = 30; // seconds
+
+// ── Kanai-Tajimi + envelope ground motion generator ───────────────────────────
+function generateGroundMotion(magnitude: number, distKm: number, soilClass: string): Float64Array {
+  const soil = SOIL_TABLE[soilClass];
+  const n = Math.floor(SIM_DURATION / DT);
+  const ag = new Float64Array(n);
+
+  // Attenuation: simplified Boore-Atkinson style PGA (g)
+  const pga = Math.exp(0.5 * (magnitude - 6.0)) * Math.pow(distKm, -1.0) * 0.25 * soil.S;
+  // Peak time
+  const tPeak = SIM_DURATION * 0.25;
+  const raiseDur = tPeak;
+  const decayDur = SIM_DURATION - tPeak;
+
+  // Dominant ground frequency (Hz) from soil class
+  const ωg = 2 * Math.PI * (1.5 + (4 - ['A','B','C','D'].indexOf(soilClass)) * 0.8);
+
+  let v = 0; // KT filter velocity state
+
+  for (let i = 0; i < n; i++) {
+    const t = i * DT;
+    // Envelope: build-up → peak → exponential decay
+    let env: number;
+    if (t <= raiseDur) {
+      env = Math.sin((Math.PI / 2) * (t / raiseDur));
+    } else {
+      env = Math.exp(-2.5 * ((t - tPeak) / decayDur));
+    }
+
+    // White-noise excitation
+    const wn = (Math.random() * 2 - 1);
+
+    // Simple 1-pole Kanai-Tajimi filter approximation
+    v = v * Math.exp(-0.6 * ωg * DT) + wn * DT * ωg;
+
+    ag[i] = env * pga * 9.81 * v; // m/s²
+  }
+  return ag;
+}
+
+// ── Newmark-β Average Acceleration SDOF Solver ───────────────────────────────
+function solveSDOF(
+  ag: Float64Array,
+  Tn: number,   // natural period (s)
+  zeta: number  // damping ratio (0.05 = 5%)
+): { u: Float64Array; v: Float64Array } {
+  const n = ag.length;
+  const omega = (2 * Math.PI) / Tn;
+  const m = 1.0; // normalised mass
+  const c = 2 * zeta * omega * m;
+  const k = omega * omega * m;
+
+  // Newmark constants (average acceleration: β=0.25, γ=0.5)
+  const beta = 0.25;
+  const gamma = 0.5;
+
+  const a1 = m / (beta * DT * DT) + gamma * c / (beta * DT);
+  const a2 = m / (beta * DT) + (gamma / beta - 1) * c;
+  const a3 = (0.5 / beta - 1) * m + DT * (0.5 * gamma / beta - 1) * c;
+  const keff = k + a1;
+
+  const u = new Float64Array(n);
+  const v = new Float64Array(n);
+  const acc = new Float64Array(n);
+
+  acc[0] = (-m * ag[0] - c * v[0] - k * u[0]) / m;
+
+  for (let i = 1; i < n; i++) {
+    const peff = -m * ag[i] + a1 * u[i - 1] + a2 * v[i - 1] + a3 * acc[i - 1];
+    u[i] = peff / keff;
+    v[i] = gamma / (beta * DT) * (u[i] - u[i - 1]) + (1 - gamma / beta) * v[i - 1] + DT * (1 - gamma / (2 * beta)) * acc[i - 1];
+    acc[i] = (u[i] - u[i - 1]) / (beta * DT * DT) - v[i - 1] / (beta * DT) - (0.5 / beta - 1) * acc[i - 1];
+  }
+
+  return { u, v };
+}
+
+// ── Floor drift colour (based on drift ratio vs code limit) ──────────────────
+function driftColor(drift: number): string {
+  const r = Math.abs(drift) / CODE_DRIFT_LIMIT;
+  if (r < 0.3) return '#34d399'; // green — safe
+  if (r < 0.6) return '#fbbf24'; // yellow
+  if (r < 0.85) return '#fb923c'; // orange
+  return '#fb7185';              // red — critical
+}
+
+// ── Slider component ──────────────────────────────────────────────────────────
+interface SliderProps { label: string; value: number; min: number; max: number; step: number; unit: string; format?: (v: number) => string; onChange: (v: number) => void; color: string; }
+const Slider: React.FC<SliderProps> = ({ label, value, min, max, step, unit, format, onChange, color }) => (
+  <div className="flex flex-col gap-1.5">
+    <div className="flex justify-between items-center text-xs">
+      <span className="text-gray-400 font-medium">{label}</span>
+      <span className="font-mono" style={{ color }}>{format ? format(value) : value.toFixed(1)}{unit}</span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      style={{ background: `linear-gradient(to right, ${color} ${((value-min)/(max-min))*100}%, rgba(99,102,241,0.2) 0%)` }}
+      className="w-full cursor-pointer"
+    />
+    <div className="flex justify-between text-[10px] text-gray-600">
+      <span>{min}{unit}</span><span>{max}{unit}</span>
+    </div>
+  </div>
 );
 
-/**
- * Advanced SeismicVisualization component
- * Creates interactive, data-rich visualizations for seismic response
- */
-const SeismicVisualization = ({
-  initialIntensity = 0.3,
-  width = '100%',
-  height = '600px',
-  className = '',
-  showControls = true,
-  initialMagnitude = 6.5,
-  initialDistance = 20,
-  initialDirection = 0,
-  initialSoilType = 'stiff',
-  onVisualizationReady = () => {},
-}) => {
-  // Core state for earthquake parameters
-  const [magnitude, setMagnitude] = useState(initialMagnitude);
-  const [distance, setDistance] = useState(initialDistance);
-  const [soilType, setSoilType] = useState(initialSoilType);
-  const [damping, setDamping] = useState(0.05);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1.0);
-  const [simulationMode, setSimulationMode] = useState('simplified'); // 'simplified' or 'realistic'
-  const [needsDataUpdate, setNeedsDataUpdate] = useState(false);
-  
-  // Canvas ref
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  const realisticDataRef = useRef(null);
-  
-  // Animation state
-  const [currentTime, setCurrentTime] = useState(0);
-  const [buildingDisplacement, setBuildingDisplacement] = useState(0);
-  
-  // Maximum number of data points to keep in time history
-  const MAX_DATA_POINTS = 300;
-  
-  // Pre-earthquake time in seconds (quiet period)
-  const PRE_EARTHQUAKE_TIME = 40;
-  // Main shock duration in seconds
-  const MAIN_SHOCK_DURATION = 15;
-  // Total simulation time in seconds
-  const TOTAL_SIMULATION_TIME = 90;
-  
-  // Animation parameters
-  const [animationData, setAnimationData] = useState({
-    frequency: 2,
-    maxAmplitude: 1,
-    dampingRatio: 0.05
-  });
+// ── Main Component ────────────────────────────────────────────────────────────
+interface SeismicVisualizationProps {
+  initialIntensity?: number;
+  className?: string;
+  showControls?: boolean;
+}
 
-  // Time history data for graphs
-  const [timeHistoryData, setTimeHistoryData] = useState({
-    time: Array.from({length: 10}, (_, i) => i),
-    pga: Array(10).fill(0),
-    velocity: Array(10).fill(0),
-    displacement: Array(10).fill(0)
-  });
-  
-  // Get calculated values based on inputs
-  const getCalculatedValues = () => {
-    // Peak ground acceleration (simplified model)
-    // Based on magnitude and distance
-    const pga = Math.pow(10, magnitude - 4.5) / Math.sqrt(distance) * 0.1;
-    
-    // Amplification factor based on soil type
-    const soilFactors = {
-      'rock': 1.0,
-      'stiff': 1.3,
-      'soft': 1.8,
-      'very-soft': 2.5
-    };
-    
-    // Get frequency and amplitude based on parameters
-    const frequency = 2.0 - (magnitude - 4.0) * 0.2; // Lower frequency for larger magnitude
-    const maxAmplitude = pga * soilFactors[soilType];
-    
-    // Return values
-    return {
-      frequency,
-      maxAmplitude,
-      dampingRatio: damping,
-      pga: pga.toFixed(2)
-    };
-  };
-  
-  // Update animation data when parameters change
-  useEffect(() => {
-    const values = getCalculatedValues();
-    setAnimationData({
-      frequency: values.frequency,
-      maxAmplitude: values.maxAmplitude,
-      dampingRatio: values.dampingRatio
-    });
-    
-    // Initialize realistic time history with pre-earthquake values
-    if (simulationMode === 'realistic') {
-      const initialTimes = Array.from({length: MAX_DATA_POINTS}, (_, i) => i * TOTAL_SIMULATION_TIME / MAX_DATA_POINTS);
-      
-      // Add small background noise to make it realistic
-      const getNoise = () => (Math.random() - 0.5) * 0.01;
-      
-      setTimeHistoryData({
-        time: initialTimes,
-        pga: initialTimes.map(t => t <= PRE_EARTHQUAKE_TIME ? getNoise() : 0),
-        velocity: initialTimes.map(t => t <= PRE_EARTHQUAKE_TIME ? getNoise() * 2 : 0),
-        displacement: initialTimes.map(t => t <= PRE_EARTHQUAKE_TIME ? getNoise() * 5 : 0)
-      });
-    } else {
-      // Reset time history when parameters change
-      setTimeHistoryData({
-        time: [],
-        pga: [],
-        velocity: [],
-        displacement: []
-      });
-    }
-    
-    setCurrentTime(0);
-  }, [magnitude, distance, soilType, damping, simulationMode]);
-  
-  // Draw animation frame
-  const drawFrame = (time, forcedPGA, forcedDisplacement) => {
-    if (!canvasRef.current) return;
-    
+const SeismicVisualization: React.FC<SeismicVisualizationProps> = ({
+  className = '',
+}) => {
+  const [magnitude, setMagnitude] = useState(6.5);
+  const [distance, setDistance] = useState(20);
+  const [soilClass, setSoilClass] = useState<'A'|'B'|'C'|'D'>('B');
+  const [damping, setDamping] = useState(5);
+  const [naturalPeriod, setNaturalPeriod] = useState(0.8);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [simSpeed, setSimSpeed] = useState(3);
+
+  // Simulation state refs (avoid re-renders during animation)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const agRef = useRef<Float64Array | null>(null);
+  const uRef = useRef<Float64Array | null>(null);
+  const frameRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
+  const playingRef = useRef(false);
+
+  // Chart mini-canvases
+  const pgaCanvasRef = useRef<HTMLCanvasElement>(null);
+  const dispCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Current metrics for display
+  const [metrics, setMetrics] = useState({ pga: 0, maxDisp: 0, maxDrift: 0, time: 0 });
+
+  // Generate simulation data
+  const runSim = useCallback(() => {
+    const ag = generateGroundMotion(magnitude, distance, soilClass);
+    const { u } = solveSDOF(ag, naturalPeriod, damping / 100);
+    agRef.current = ag;
+    uRef.current = u;
+    frameRef.current = 0;
+    // Compute max values
+    let maxPGA = 0, maxU = 0;
+    for (let i = 0; i < ag.length; i++) { maxPGA = Math.max(maxPGA, Math.abs(ag[i])); maxU = Math.max(maxU, Math.abs(u[i])); }
+    setMetrics({ pga: maxPGA / 9.81, maxDisp: maxU * 100, maxDrift: (maxU / (NUM_FLOORS * FLOOR_HEIGHT_M)) * 100, time: 0 });
+  }, [magnitude, distance, soilClass, damping, naturalPeriod]);
+
+  // Generate on param change
+  useEffect(() => { runSim(); }, [runSim]);
+
+  // ── Draw canvas frame ────────────────────────────────────────────────────────
+  const drawFrame = useCallback((frameIdx: number) => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    // Draw ground
-    const groundY = height * 0.75;
-    ctx.fillStyle = '#6b7280';
-    ctx.fillRect(0, groundY, width, height - groundY);
-    
-    // Calculate ground motion (horizontal sinusoidal motion)
-    let groundMotion, buildingResp;
-    
-    if (forcedPGA !== undefined && forcedDisplacement !== undefined) {
-      // For realistic mode - use the pre-calculated values
-      groundMotion = forcedPGA * 300; // Convert to pixel scale for better visibility
-      buildingResp = forcedDisplacement * 0.5; // Scale displacement for better visualization
-      setBuildingDisplacement(buildingResp);
-    } else {
-      // For simplified mode - calculate sinusoidal response
-      const { frequency, maxAmplitude } = animationData;
-      groundMotion = Math.sin(2 * Math.PI * frequency * time) * maxAmplitude * 30;
-      
-      // Calculate building response (with phase lag and amplification at top)
-      // Using simplified SDOF response
-      const dampingFactor = Math.exp(-animationData.dampingRatio * 2 * Math.PI * frequency * time);
-      buildingResp = -groundMotion * dampingFactor * 1.5;
-      setBuildingDisplacement(buildingResp);
-      
-      // Generate time history data for engineering graphs
-      updateTimeHistoryData(time, groundMotion, buildingResp);
+    if (!canvas || !agRef.current || !uRef.current) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const ag = agRef.current;
+    const u = uRef.current;
+    const fi = Math.min(frameIdx, ag.length - 1);
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#050e1f');
+    bg.addColorStop(1, '#0d1f3c');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    // ── Ground ────────────────────────────────────────────────────────────────
+    const groundY = h * 0.82;
+    const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
+    groundGrad.addColorStop(0, '#1e3a5f');
+    groundGrad.addColorStop(1, '#0a1628');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, groundY, w, h - groundY);
+
+    // Ground wave pattern
+    const groundShift = u[fi] * 30;
+    ctx.strokeStyle = 'rgba(34,211,238,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < w; x += 4) {
+      const y = groundY + 3 + Math.sin((x + groundShift * 5) * 0.08) * 3;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    
-    // Draw building (10-story)
-    const buildingWidth = width * 0.3;
-    const buildingHeight = groundY * 0.8;
-    const buildingX = width / 2 - buildingWidth / 2;
-    const buildingY = groundY - buildingHeight;
-    
-    // Number of floors
-    const numFloors = 10;
-    const floorHeight = buildingHeight / numFloors;
-    
-    // Draw each floor with increasing displacement at higher floors
-    for (let floor = 0; floor <= numFloors; floor++) {
-      const floorY = groundY - floor * floorHeight;
-      
-      // Displacement increases with height (mode shape)
-      // For realistic mode, we apply a mode shape profile
-      const floorDisplacement = simulationMode === 'realistic' 
-        ? buildingResp * Math.pow(floor / numFloors, 1.3) // Non-linear shape for realistic mode
-        : buildingResp * (floor / numFloors); // Linear shape for simplified mode
-      
-      // Draw floor slab
-      ctx.fillStyle = floor === 0 ? '#1e40af' : '#3b82f6';
-      ctx.fillRect(buildingX + floorDisplacement, floorY - 5, buildingWidth, 10);
-      ctx.strokeStyle = '#2563eb';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(buildingX + floorDisplacement, floorY - 5, buildingWidth, 10);
-      
-      // Draw columns for all floors except the top
-      if (floor < numFloors) {
-        const nextFloorDisp = simulationMode === 'realistic'
-          ? buildingResp * Math.pow((floor + 1) / numFloors, 1.3) // Non-linear shape
-          : buildingResp * ((floor + 1) / numFloors); // Linear shape
-        
-        ctx.strokeStyle = '#2563eb';
-        ctx.lineWidth = 2;
-        
-        // Left column
-        ctx.beginPath();
-        ctx.moveTo(buildingX + floorDisplacement, floorY);
-        ctx.lineTo(buildingX + nextFloorDisp, floorY - floorHeight);
-        ctx.stroke();
-        
-        // Right column
-        ctx.beginPath();
-        ctx.moveTo(buildingX + floorDisplacement + buildingWidth, floorY);
-        ctx.lineTo(buildingX + nextFloorDisp + buildingWidth, floorY - floorHeight);
-        ctx.stroke();
+    ctx.stroke();
+
+    // ── Building ─────────────────────────────────────────────────────────────
+    const bw = w * 0.2;
+    const totalBH = groundY * 0.78;
+    const bx0 = w / 2 - bw / 2;
+    const floorH = totalBH / NUM_FLOORS;
+
+    // Window pattern helper
+    const drawWindows = (fx: number, fy: number, floorW: number, fh: number, drift: number) => {
+      const ww = floorW * 0.18;
+      const wh = fh * 0.4;
+      const wOpacity = Math.max(0, 1 - Math.abs(drift) / CODE_DRIFT_LIMIT * 1.5);
+      ctx.fillStyle = `rgba(99,102,241,${0.08 + wOpacity * 0.12})`;
+      for (let wx = fx + floorW * 0.1; wx < fx + floorW - ww; wx += floorW * 0.3) {
+        ctx.fillRect(wx, fy + fh * 0.15, ww, wh);
       }
+    };
+
+    for (let floor = 0; floor < NUM_FLOORS; floor++) {
+      const floorFraction = floor / NUM_FLOORS;
+      const nextFraction = (floor + 1) / NUM_FLOORS;
+
+      // Mode shape: 1st mode — sin curve approximation
+      const modeShape = Math.sin((Math.PI / 2) * floorFraction);
+      const modeShapeNext = Math.sin((Math.PI / 2) * nextFraction);
+
+      const thisDisp = u[fi] * modeShape * 80;        // pixels
+      const nextDisp = u[fi] * modeShapeNext * 80;
+
+      const floorY = groundY - (floor + 1) * floorH;
+
+      // Drift ratio for this storey
+      const storyDriftM = Math.abs((u[fi] * modeShapeNext - u[fi] * modeShape));
+      const driftRatio = storyDriftM / FLOOR_HEIGHT_M;
+
+      const col = driftColor(driftRatio);
+
+      // Floor slab
+      const slabX = bx0 + thisDisp;
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 6;
+      ctx.fillRect(slabX, floorY, bw, 5);
+      ctx.shadowBlur = 0;
+
+      // Columns from this floor to next
+      const nSlabX = bx0 + nextDisp;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = floor === 0 ? 4 : 2.5;
+      ctx.globalAlpha = 0.85;
+      [[slabX, nSlabX], [slabX + bw, nSlabX + bw]].forEach(([x1, x2]) => {
+        ctx.beginPath();
+        ctx.moveTo(x1, floorY + 5);
+        ctx.lineTo(x2, floorY + 5 + floorH);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+
+      // Windows
+      drawWindows(slabX, floorY + 5, bw, floorH - 5, driftRatio);
     }
-    
-    // Draw ground motion visualization
-    if (simulationMode === 'realistic') {
-      // Draw realistic ground representation in realistic mode
-      
-      // Get time index for current frame
-      const normalizedTime = time / TOTAL_SIMULATION_TIME;
-      const dataLength = timeHistoryData.time.length;
-      const timeIndex = Math.min(Math.floor(normalizedTime * dataLength), dataLength - 1);
-      
-      // Draw wave pattern in ground based on actual data
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      
-      const numPoints = 100; // Number of points to sample for drawing the wave
-      const waveAmplitude = 8; // Visual amplitude of wave pattern
-      
-      for (let i = 0; i < numPoints; i++) {
-        // Sample points from the acceleration data
-        const dataIndex = Math.min(Math.floor((i / numPoints) * dataLength), dataLength - 1);
-        const dataValue = timeHistoryData.pga[dataIndex] || 0;
-        
-        // Calculate x position
-        const x = (i / numPoints) * width;
-        
-        // Calculate y position based on data - only draw the most recent 20% of data
-        const dataTimeNormalized = dataIndex / dataLength;
-        const timeWindowStart = Math.max(0, normalizedTime - 0.2);
-        
-        // Only show recent activity in the wave pattern
-        const opacity = dataTimeNormalized >= timeWindowStart && dataTimeNormalized <= normalizedTime 
-          ? 1 - (normalizedTime - dataTimeNormalized) * 5 // Fade based on recency
-          : 0;
-        
-        if (opacity > 0) {
-          const y = groundY + 5 + dataValue * waveAmplitude * opacity;
-          
-          if (i === 0 || opacity === 0) {
-            ctx.moveTo(x, groundY + 5);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-      }
-      
-      ctx.stroke();
-      
-      // Draw ground acceleration arrow (using actual current value)
-      const currentPGA = forcedPGA || 0;
-      const arrowLength = Math.abs(currentPGA) * 300; // Scale for visibility
-      const arrowDirection = currentPGA > 0 ? 1 : -1;
-      
-      if (arrowLength > 5) { // Only draw if significant
-        // Arrow head
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.moveTo(width / 2 - arrowLength * arrowDirection, groundY + 20);
-        ctx.lineTo(width / 2, groundY + 15);
-        ctx.lineTo(width / 2, groundY + 25);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Arrow line
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(width / 2, groundY + 20);
-        ctx.lineTo(width / 2 - arrowLength * arrowDirection, groundY + 20);
-        ctx.stroke();
-      }
-    } else {
-      // For simplified mode, use original visualization
-      // Draw ground motion arrow
-      const arrowLength = Math.abs(groundMotion);
-      const arrowDirection = groundMotion > 0 ? 1 : -1;
-      
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - arrowLength * arrowDirection, groundY + 20);
-      ctx.lineTo(width / 2, groundY + 15);
-      ctx.lineTo(width / 2, groundY + 25);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Arrow line
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(width / 2, groundY + 20);
-      ctx.lineTo(width / 2 - arrowLength * arrowDirection, groundY + 20);
-      ctx.stroke();
-      
-      // Add visual wave pattern in ground
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      
-      for (let x = 0; x < width; x += 5) {
-        // Create wave pattern based on current time and position
-        const y = groundY + 5 + Math.sin(x / 20 + time * 10) * 3;
-        
-        if (x === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      }
-      
-      ctx.stroke();
+
+    // Ground floor base
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillRect(bx0 + u[fi] * 0 - 20, groundY - 5, bw + 40, 5);
+
+    // ── Ground motion waveform strip (mini seismograph at bottom) ─────────────
+    const wavH = h * 0.07;
+    const wavY0 = h - wavH - 4;
+    const scale = (wavH / 2) / (Math.max(...Array.from(ag).map(Math.abs)) + 0.001);
+
+    ctx.strokeStyle = 'rgba(34,211,238,0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    const step = Math.max(1, Math.floor(ag.length / w));
+    for (let x = 0; x < w; x++) {
+      const di = Math.min(Math.floor((x / w) * fi), ag.length - 1);
+      const y = wavY0 + wavH / 2 - ag[di] * scale;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    
-    // Add info text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px Arial';
+    ctx.stroke();
+
+    // Progress indicator line
+    ctx.strokeStyle = 'rgba(251,113,133,0.9)';
+    ctx.lineWidth = 1.5;
+    const px = (fi / ag.length) * w;
+    ctx.beginPath(); ctx.moveTo(px, wavY0); ctx.lineTo(px, wavY0 + wavH); ctx.stroke();
+
+    // ── Labels ────────────────────────────────────────────────────────────────
+    ctx.font = 'bold 11px "Inter", monospace';
     ctx.textAlign = 'center';
-    
-    // Display PGA
-    let pgaText;
-    if (simulationMode === 'realistic' && forcedPGA !== undefined) {
-      pgaText = `Peak Ground Acceleration: ${Math.abs(forcedPGA).toFixed(2)}g`;
-    } else {
-      const pga = getCalculatedValues().pga;
-      pgaText = `Peak Ground Acceleration: ${pga}g`;
+    const dispCm = (Math.abs(u[fi]) * 100).toFixed(1);
+    const currentDrift = ((Math.abs(u[fi]) / (NUM_FLOORS * FLOOR_HEIGHT_M)) * 100).toFixed(2);
+
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillText(`Roof Δ: ${dispCm} cm`, w * 0.25, groundY - 10);
+
+    const driftNum = parseFloat(currentDrift);
+    ctx.fillStyle = driftNum > 2 ? '#fb7185' : driftNum > 1 ? '#fb923c' : '#34d399';
+    ctx.fillText(`Drift: ${currentDrift}%`, w * 0.75, groundY - 10);
+
+    ctx.fillStyle = '#a5b4fc';
+    ctx.fillText(`t = ${(fi * DT).toFixed(2)}s`, w / 2, groundY + 20);
+
+  }, []);
+
+  // ── Mini PGA chart ───────────────────────────────────────────────────────────
+  const drawPGAChart = useCallback((frameIdx: number) => {
+    const canvas = pgaCanvasRef.current;
+    if (!canvas || !agRef.current) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const ag = agRef.current;
+    const maxAG = Math.max(...Array.from(ag).map(Math.abs)) + 0.001;
+
+    // Axes
+    ctx.strokeStyle = 'rgba(99,102,241,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+
+    // Signal (past = cyan, future = dim)
+    const fi = Math.min(frameIdx, ag.length - 1);
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(34,211,238,0.8)';
+    ctx.lineWidth = 1.5;
+    const step = Math.max(1, Math.floor(ag.length / w));
+    for (let x = 0; x < w; x++) {
+      const di = Math.min(Math.floor((x / w) * fi), ag.length - 1);
+      const y = h / 2 - (ag[di] / maxAG) * (h / 2 - 4);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    ctx.fillText(pgaText, width / 2, groundY + 50);
-    
-    // Display displacement
-    const dispValue = Math.abs(buildingResp);
-    ctx.fillStyle = '#10b981';
-    ctx.fillText(`Building Displacement: ${dispValue.toFixed(1)} cm`, width / 2, buildingY - 20);
-    
-    // Display current time if in realistic mode
-    if (simulationMode === 'realistic') {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12px Arial';
-      ctx.fillText(`Time: ${time.toFixed(1)}s`, width / 2, groundY + 70);
-      
-      // Display earthquake phase
-      let phaseText = "";
-      if (time < PRE_EARTHQUAKE_TIME) {
-        phaseText = "Pre-earthquake quiet period";
-      } else if (time < PRE_EARTHQUAKE_TIME + MAIN_SHOCK_DURATION) {
-        phaseText = "Main shock";
-      } else {
-        phaseText = "Aftershock period";
-      }
-      ctx.fillText(phaseText, width / 2, groundY + 90);
+    ctx.stroke();
+
+    // Cursor
+    const pct = (fi / ag.length) * w;
+    ctx.strokeStyle = '#fb7185';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pct, 0); ctx.lineTo(pct, h); ctx.stroke();
+
+    // Label
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#a5b4fc';
+    ctx.textAlign = 'left';
+    ctx.fillText(`PGA: ${(Math.abs(ag[fi]) / 9.81).toFixed(3)}g`, 4, 12);
+  }, []);
+
+  const drawDispChart = useCallback((frameIdx: number) => {
+    const canvas = dispCanvasRef.current;
+    if (!canvas || !uRef.current) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const u = uRef.current;
+    const maxU = Math.max(...Array.from(u).map(Math.abs)) + 0.001;
+
+    ctx.strokeStyle = 'rgba(99,102,241,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+
+    const fi = Math.min(frameIdx, u.length - 1);
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(139,92,246,0.9)';
+    ctx.lineWidth = 1.5;
+    for (let x = 0; x < w; x++) {
+      const di = Math.min(Math.floor((x / w) * fi), u.length - 1);
+      const y = h / 2 - (u[di] / maxU) * (h / 2 - 4);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-  };
-  
-  // Update time history data for engineering graphs
-  const updateTimeHistoryData = (time, groundMotion, buildingResp) => {
-    if (simulationMode === 'realistic') {
-      // In realistic mode, we use pre-generated data with proper earthquake characteristics
-      // Just update the current time pointer
-      setCurrentTime(time);
+    ctx.stroke();
+
+    const pct = (fi / u.length) * w;
+    ctx.strokeStyle = '#fb7185';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pct, 0); ctx.lineTo(pct, h); ctx.stroke();
+
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#a5b4fc';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Δ: ${(Math.abs(u[fi]) * 100).toFixed(2)} cm`, 4, 12);
+  }, []);
+
+  // ── Animation loop ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    playingRef.current = isPlaying;
+
+    if (!isPlaying) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
-    
-    setTimeHistoryData(prevData => {
-      // More accurate calculation of ground acceleration
-      const { frequency, maxAmplitude } = animationData;
-      
-      // Use proper seismic engineering formulas
-      // PGA calculation based on second derivative of displacement
-      const groundAccel = -Math.sin(2 * Math.PI * frequency * time) * maxAmplitude * Math.pow(2 * Math.PI * frequency, 2) * 0.01; // in g
-      
-      // Velocity calculation using first derivative of displacement
-      const groundVelocity = Math.cos(2 * Math.PI * frequency * time) * maxAmplitude * (2 * Math.PI * frequency) * 0.01; // in m/s
-      
-      // Convert building displacement to cm with more realistic scaling
-      const buildingDisp = buildingResp * 0.3; // Scale factor for display in cm
-      
-      // Limit the number of data points
-      const newTimes = [...prevData.time, time.toFixed(2)].slice(-MAX_DATA_POINTS);
-      const newPga = [...prevData.pga, groundAccel.toFixed(4)].slice(-MAX_DATA_POINTS);
-      const newVelocity = [...prevData.velocity, groundVelocity.toFixed(4)].slice(-MAX_DATA_POINTS);
-      const newDisplacement = [...prevData.displacement, buildingDisp.toFixed(4)].slice(-MAX_DATA_POINTS);
-      
-      return {
-        time: newTimes,
-        pga: newPga,
-        velocity: newVelocity,
-        displacement: newDisplacement
-      };
-    });
-  };
-  
-  // Generate realistic earthquake data based on parameters
-  const generateRealisticEarthquakeData = () => {
-    console.log("Generating realistic data with:", { magnitude, distance, soilType, damping });
-    // Create time array from 0 to TOTAL_SIMULATION_TIME with MAX_DATA_POINTS points
-    const timeArray = Array.from({length: MAX_DATA_POINTS}, (_, i) => i * TOTAL_SIMULATION_TIME / MAX_DATA_POINTS);
-    
-    // Background noise function - small random values
-    const getNoise = (amplitude = 0.01) => (Math.random() - 0.5) * amplitude;
-    
-    // Soil factors based on type
-    const soilFactors = {
-      'rock': 1.0,
-      'stiff': 1.3,
-      'soft': 1.8,
-      'very-soft': 2.5
-    };
-    
-    // Scale factor based on soil type
-    const soilFactor = soilFactors[soilType];
-    
-    // Generate accelerogram data
-    const pgaData = timeArray.map(t => {
-      // Pre-earthquake phase (just noise)
-      if (t < PRE_EARTHQUAKE_TIME) {
-        return getNoise(0.02);
-      }
-      // Main shock phase
-      else if (t < PRE_EARTHQUAKE_TIME + MAIN_SHOCK_DURATION) {
-        // Time relative to start of earthquake
-        const relativeTime = t - PRE_EARTHQUAKE_TIME;
-        
-        // Peak amplitude scaling based on magnitude and distance
-        // More accurate formula based on magnitude and distance
-        const peakAmplitude = Math.pow(10, magnitude - 5.0) / Math.sqrt(distance/10) * soilFactor;
-        
-        // Envelope function - builds up quickly and decays more slowly
-        const envelope = Math.sin(Math.PI * relativeTime / MAIN_SHOCK_DURATION) * 
-                         Math.exp(-0.2 * relativeTime);
-        
-        // Main oscillatory component with varying frequency
-        const mainComponent = envelope * peakAmplitude * 
-                             Math.sin(2 * Math.PI * 2 * relativeTime) * 
-                             Math.sin(2 * Math.PI * 0.5 * relativeTime);
-        
-        // Add higher frequency components for realism
-        const highFreqComponent = envelope * peakAmplitude * 0.7 * 
-                                 Math.sin(2 * Math.PI * 5 * relativeTime) * 
-                                 Math.cos(2 * Math.PI * 3 * relativeTime + 0.5);
-        
-        // Add random spikes that occur during strong motion
-        const randomSpikes = envelope * peakAmplitude * 0.5 * 
-                            (Math.random() > 0.9 ? (Math.random() - 0.5) : 0);
-        
-        return mainComponent + highFreqComponent + randomSpikes + getNoise(0.05);
-      }
-      // Post-earthquake phase (coda waves and aftershocks)
-      else {
-        const relativeTime = t - (PRE_EARTHQUAKE_TIME + MAIN_SHOCK_DURATION);
-        
-        // Exponential decay for coda waves - use damping parameter
-        const decay = Math.exp(-damping * 20 * relativeTime);
-        
-        // Decaying oscillations with some randomness
-        const codaWaves = decay * 0.2 * Math.sin(2 * Math.PI * 1.5 * relativeTime) * 
-                          Math.sin(2 * Math.PI * 0.7 * relativeTime);
-        
-        // Occasional small aftershocks
-        const aftershock = Math.random() > 0.98 ? 
-                          decay * 0.3 * Math.sin(2 * Math.PI * 3 * relativeTime) : 0;
-        
-        return codaWaves + aftershock + getNoise(0.03 * decay);
-      }
-    });
-    
-    // Derive velocity through numerical integration of acceleration
-    let velocity = 0;
-    const velocityData = pgaData.map((acc, i) => {
-      // Time step in seconds
-      const dt = TOTAL_SIMULATION_TIME / MAX_DATA_POINTS;
-      
-      // Simple trapezoidal numerical integration
-      velocity += acc * dt * 100; // Scale to cm/sec
-      
-      // Add slight damping to prevent drift
-      velocity *= (1 - damping * 0.2);
-      
-      return velocity;
-    });
-    
-    // Derive displacement through numerical integration of velocity
-    let displacement = 0;
-    const displacementData = velocityData.map((vel, i) => {
-      // Time step in seconds
-      const dt = TOTAL_SIMULATION_TIME / MAX_DATA_POINTS;
-      
-      // Simple trapezoidal numerical integration
-      displacement += vel * dt;
-      
-      // Add slight damping to prevent drift
-      displacement *= (1 - damping * 0.2);
-      
-      return displacement;
-    });
-    
-    // Store the generated data in a ref to avoid regenerating unnecessarily
-    realisticDataRef.current = {
-      time: timeArray,
-      pga: pgaData,
-      velocity: velocityData,
-      displacement: displacementData,
-      parameters: {
-        magnitude,
-        distance,
-        soilType,
-        damping
-      }
-    };
-    
-    return {
-      time: timeArray,
-      pga: pgaData,
-      velocity: velocityData,
-      displacement: displacementData
-    };
-  };
-  
-  // When parameters change, check if we need to regenerate realistic data
-  useEffect(() => {
-    // Only update when in realistic mode
-    if (simulationMode === 'realistic') {
-      // Check if parameters have changed
-      const currentParams = realisticDataRef.current?.parameters;
-      const paramsChanged = !currentParams || 
-        currentParams.magnitude !== magnitude ||
-        currentParams.distance !== distance ||
-        currentParams.soilType !== soilType ||
-        currentParams.damping !== damping;
-      
-      if (paramsChanged) {
-        console.log("Parameters changed, regenerating data");
-        setNeedsDataUpdate(true);
-      }
-    }
-  }, [magnitude, distance, soilType, damping, simulationMode]);
 
-  // Update data when changes are needed
-  useEffect(() => {
-    if (needsDataUpdate && simulationMode === 'realistic') {
-      console.log("Updating realistic data");
-      // Generate new data with current parameters
-      const newData = generateRealisticEarthquakeData();
-      
-      // Update state with new data
-      setTimeHistoryData(newData);
-      
-      // Reset time and redraw
-      setCurrentTime(0);
-      if (canvasRef.current) {
-        drawFrame(0, newData.pga[0], newData.displacement[0]);
-      }
-      
-      // Reset the need for update
-      setNeedsDataUpdate(false);
-    }
-  }, [needsDataUpdate, simulationMode]);
-  
-  // Animation loop
-  const animate = () => {
-    if (!isPlaying) return;
-    
-    setCurrentTime(prevTime => {
-      const newTime = prevTime + 0.016 * speed; // ~60fps with speed factor
-      
-      // For realistic mode, we precompute all the data and just animate through it
-      if (simulationMode === 'realistic') {
-        // Get normalized time index in the precomputed data
-        const normalizedTime = newTime / TOTAL_SIMULATION_TIME;
-        const timeIndex = Math.min(
-          Math.floor(normalizedTime * timeHistoryData.time.length), 
-          timeHistoryData.time.length - 1
-        );
-        
-        // Get current values from precomputed data
-        const currentPGA = timeHistoryData.pga[timeIndex] || 0;
-        const currentDisplacement = timeHistoryData.displacement[timeIndex] || 0;
-        
-        // Draw the current frame with forced values
-        if (canvasRef.current) {
-          drawFrame(newTime, currentPGA, currentDisplacement);
-        }
-        
-        // Reset if we reach the end
-        if (newTime >= TOTAL_SIMULATION_TIME) {
-          // Stop animation when it reaches the end
-          cancelAnimationFrame(animationRef.current);
-          setIsPlaying(false);
-          return 0;
-        }
-        
-        return newTime;
+    const loop = () => {
+      if (!playingRef.current) return;
+      frameRef.current += simSpeed;
+      const fi = frameRef.current;
+
+      drawFrame(fi);
+      drawPGAChart(fi);
+      drawDispChart(fi);
+
+      if (agRef.current && fi < agRef.current.length - 1) {
+        rafRef.current = requestAnimationFrame(loop);
       } else {
-        // For simplified mode, calculate on the fly
-        if (canvasRef.current) {
-          drawFrame(newTime);
-        }
-        return newTime;
-      }
-    });
-    
-    animationRef.current = requestAnimationFrame(animate);
-  };
-  
-  // Reset function to properly reset animation and data
-  const handleReset = () => {
-    // Stop animation if playing
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-    
-    // Reset time and displacement
-    setCurrentTime(0);
-    setBuildingDisplacement(0);
-    
-    // Regenerate earthquake data regardless of mode
-    if (simulationMode === 'realistic') {
-      // Check if we need to regenerate the data or just reuse existing data
-      let newData;
-      
-      // If parameters haven't changed since last generation, reuse the data
-      const currentParams = realisticDataRef.current?.parameters;
-      const paramsChanged = !currentParams || 
-        currentParams.magnitude !== magnitude ||
-        currentParams.distance !== distance ||
-        currentParams.soilType !== soilType ||
-        currentParams.damping !== damping;
-      
-      if (paramsChanged || !realisticDataRef.current) {
-        // Generate new data
-        newData = generateRealisticEarthquakeData();
-      } else {
-        // Reuse existing data
-        newData = {
-          time: [...realisticDataRef.current.time],
-          pga: [...realisticDataRef.current.pga],
-          velocity: [...realisticDataRef.current.velocity],
-          displacement: [...realisticDataRef.current.displacement]
-        };
-      }
-      
-      // Update UI with data
-      setTimeHistoryData(newData);
-      
-      // Draw the first frame with initial values
-      if (canvasRef.current) {
-        drawFrame(0, newData.pga[0], newData.displacement[0]);
-      }
-    } else {
-      // Reset to empty data for simplified mode
-      setTimeHistoryData({
-        time: [],
-        pga: [],
-        velocity: [],
-        displacement: []
-      });
-      
-      // Draw initial frame with simplified values
-      if (canvasRef.current) {
-        drawFrame(0);
-      }
-    }
-    
-    // If animation was playing, restart it
-    if (isPlaying) {
-      animationRef.current = requestAnimationFrame(animate);
-    }
-  };
-  
-  // Start/stop animation
-  useEffect(() => {
-    if (isPlaying) {
-      // If we're in realistic mode and don't have data, generate it
-      if (simulationMode === 'realistic' && (!realisticDataRef.current || timeHistoryData.pga.length <= 10)) {
-        const newData = generateRealisticEarthquakeData();
-        setTimeHistoryData(newData);
-      }
-      
-      animationRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    }
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+        setIsPlaying(false);
       }
     };
-  }, [isPlaying, speed, simulationMode]);
-  
-  // Initialize canvas and data
+    rafRef.current = requestAnimationFrame(loop);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [isPlaying, simSpeed, drawFrame, drawPGAChart, drawDispChart]);
+
+  // Draw static first frame on param change
   useEffect(() => {
-    // Generate realistic earthquake data on first load or mode change
-    if (simulationMode === 'realistic') {
-      const newData = generateRealisticEarthquakeData();
-      setTimeHistoryData(newData);
-      
-      // Draw the initial frame
-      if (canvasRef.current) {
-        drawFrame(0, newData.pga[0], newData.displacement[0]);
-      }
-    } else {
-      setTimeHistoryData({
-        time: [],
-        pga: [],
-        velocity: [],
-        displacement: []
-      });
-      
-      // Draw initial frame
-      if (canvasRef.current) {
-        drawFrame(0);
-      }
-    }
-    
-    // Notify parent component that visualization is ready
-    onVisualizationReady();
-  }, [simulationMode]);
+    frameRef.current = 0;
+    drawFrame(0);
+    drawPGAChart(0);
+    drawDispChart(0);
+  }, [agRef.current, drawFrame, drawPGAChart, drawDispChart]);
 
-  // Engineering time history graphs with improved styling and time labels
-  const pgaChartData = {
-    labels: timeHistoryData.time.map(t => Number(t).toFixed(0)),
-    datasets: [
-      {
-        label: 'Peak Ground Acceleration',
-        data: timeHistoryData.pga,
-        borderColor: 'rgba(0, 0, 220, 1)',
-        backgroundColor: 'rgba(0, 0, 220, 0.05)',
-        fill: true,
-        tension: 0.1,
-        pointRadius: 0,
-        borderWidth: 1.5
-      }
-    ]
-  };
+  const soil = SOIL_TABLE[soilClass];
+  const maxDrift = metrics.maxDrift;
+  const driftStatus = maxDrift > 2.5 ? 'CRITICAL' : maxDrift > 1.5 ? 'WARNING' : 'SAFE';
+  const driftStatusColor = maxDrift > 2.5 ? '#fb7185' : maxDrift > 1.5 ? '#fb923c' : '#34d399';
 
-  const velocityChartData = {
-    labels: timeHistoryData.time.map(t => Number(t).toFixed(0)),
-    datasets: [
-      {
-        label: 'Ground Velocity',
-        data: timeHistoryData.velocity,
-        borderColor: 'rgba(0, 0, 220, 1)',
-        backgroundColor: 'rgba(0, 0, 220, 0.05)',
-        fill: true,
-        tension: 0.1,
-        pointRadius: 0,
-        borderWidth: 1.5
-      }
-    ]
-  };
-
-  const displacementChartData = {
-    labels: timeHistoryData.time.map(t => Number(t).toFixed(0)),
-    datasets: [
-      {
-        label: 'Building Displacement',
-        data: timeHistoryData.displacement,
-        borderColor: 'rgba(0, 0, 220, 1)',
-        backgroundColor: 'rgba(0, 0, 220, 0.05)',
-        fill: true,
-        tension: 0.1,
-        pointRadius: 0,
-        borderWidth: 1.5
-      }
-    ]
-  };
-
-  // Enhanced chart options for a more professional appearance
-  const getChartOptions = (title, yAxisLabel, minY, maxY) => {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        title: {
-          display: true,
-          text: title,
-          font: {
-            size: 14,
-            weight: 'bold',
-            family: "'Roboto', 'Arial', sans-serif"
-          }
-        },
-        tooltip: {
-          enabled: true,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleFont: {
-            size: 12,
-            family: "'Roboto', 'Arial', sans-serif"
-          },
-          bodyFont: {
-            size: 11,
-            family: "'Roboto', 'Arial', sans-serif"
-          },
-          padding: 10,
-          caretSize: 5,
-          cornerRadius: 4,
-          displayColors: false,
-          callbacks: {
-            label: function(context) {
-              return `${yAxisLabel}: ${context.raw}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Time [sec]',
-            font: {
-              size: 12,
-              weight: 'bold',
-              family: "'Roboto', 'Arial', sans-serif"
-            }
-          },
-          ticks: {
-            font: {
-              size: 10,
-              family: "'Roboto', 'Arial', sans-serif"
-            },
-            autoSkip: true,
-            maxTicksLimit: 12,
-            callback: function(value, index, values) {
-              // Only show a subset of tick labels for readability
-              return Number(this.getLabelForValue(value)).toFixed(0);
-            }
-          },
-          grid: {
-            color: 'rgba(200, 200, 200, 0.3)',
-            lineWidth: 1
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: yAxisLabel,
-            font: {
-              size: 12,
-              weight: 'bold',
-              family: "'Roboto', 'Arial', sans-serif"
-            }
-          },
-          min: minY,
-          max: maxY,
-          ticks: {
-            font: {
-              size: 10,
-              family: "'Roboto', 'Arial', sans-serif"
-            },
-            precision: 1
-          },
-          grid: {
-            color: 'rgba(200, 200, 200, 0.3)',
-            lineWidth: 1
-          }
-        }
-      },
-      animation: {
-        duration: 0 // Disable animations for better performance
-      },
-      elements: {
-        line: {
-          tension: 0.1,
-          borderWidth: 1.5
-        },
-        point: {
-          radius: 0 // Hide points for smoother lines
-        }
-      }
-    };
-  };
-  
   return (
-    <div className={`seismic-visualization ${className}`} style={{ width, position: 'relative' }}>
-      <div className="flex flex-col gap-6">
-        {/* Main visualization area */}
-        <div className="flex-grow">
-          <div 
-            className="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden relative"
-            style={{ height }}
-          >
-            <canvas 
-              ref={canvasRef} 
-              width={800} 
-              height={600}
-              className="w-full h-full"
-            />
-            
-            {/* Playback controls */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
-              {!isPlaying ? (
-                <button 
-                  onClick={() => setIsPlaying(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+    <div className={`flex flex-col gap-0 ${className}`}>
+
+      {/* ── Main Layout: Controls | Canvas ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+
+        {/* ── Controls Panel ── */}
+        <div className="glass-panel rounded-xl p-5 flex flex-col gap-5">
+          <div>
+            <h3 className="text-sm font-bold text-white mb-1 tracking-wide uppercase">Parameters</h3>
+            <p className="text-xs text-gray-500">Adjust and press Simulate</p>
+          </div>
+
+          <Slider label="Magnitude (Mw)" min={5.0} max={9.0} step={0.1} value={magnitude} unit="" format={v => v.toFixed(1)} onChange={setMagnitude} color="#fb7185" />
+          <Slider label="Epicentral Distance" min={5} max={150} step={5} value={distance} unit=" km" onChange={setDistance} color="#22d3ee" />
+          <Slider label="Structural Damping" min={2} max={15} step={0.5} value={damping} unit="%" onChange={setDamping} color="#8b5cf6" />
+          <Slider label="Natural Period Tₙ" min={0.2} max={3.0} step={0.05} value={naturalPeriod} unit=" s" onChange={setNaturalPeriod} color="#a5b4fc" />
+
+          {/* Soil Class */}
+          <div>
+            <div className="text-xs text-gray-400 font-medium mb-2">Soil Classification (EC8)</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {(['A','B','C','D'] as const).map(sc => (
+                <button key={sc} onClick={() => setSoilClass(sc)}
+                  className={`py-2 rounded-lg text-xs font-bold border transition-all ${soilClass === sc ? 'opacity-100 text-white' : 'opacity-40 hover:opacity-70 text-gray-300 border-transparent'}`}
+                  style={{ borderColor: soilClass === sc ? SOIL_TABLE[sc].color : undefined, background: soilClass === sc ? `${SOIL_TABLE[sc].color}22` : 'rgba(255,255,255,0.04)' }}
                 >
-                  Play
+                  {sc}
                 </button>
-              ) : (
-                <button 
-                  onClick={() => setIsPlaying(false)}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
-                >
-                  Pause
-                </button>
-              )}
-              
-              <button 
-                onClick={() => {
-                  // Force stop and reset
-                  setIsPlaying(false);
-                  setTimeout(() => handleReset(), 50);
-                }}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
-              >
-                Reset
-              </button>
-              
-              <div className="flex items-center bg-gray-800 bg-opacity-50 rounded-lg px-3">
-                <span className="text-white mr-2 text-sm">Speed:</span>
-                <select 
-                  value={speed}
-                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                  className="bg-transparent text-white border-none text-sm"
-                >
-                  <option value={0.5}>0.5x</option>
-                  <option value={1.0}>1.0x</option>
-                  <option value={1.5}>1.5x</option>
-                  <option value={2.0}>2.0x</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center bg-gray-800 bg-opacity-50 rounded-lg px-3">
-                <span className="text-white mr-2 text-sm">Mode:</span>
-                <select 
-                  value={simulationMode}
-                  onChange={(e) => {
-                    // Stop animation if playing
-                    setIsPlaying(false);
-                    // Change mode
-                    setSimulationMode(e.target.value);
-                    // Reset when changing modes for consistent state
-                    setTimeout(() => handleReset(), 50);
-                  }}
-                  className="bg-transparent text-white border-none text-sm"
-                >
-                  <option value="simplified">Simplified</option>
-                  <option value="realistic">Realistic</option>
-                </select>
-              </div>
+              ))}
+            </div>
+            <p className="text-[10px] mt-1.5" style={{ color: soil.color }}>{soil.label} · S={soil.S}</p>
+          </div>
+
+          {/* Speed */}
+          <div>
+            <div className="text-xs text-gray-400 mb-2">Playback Speed</div>
+            <div className="grid grid-cols-3 gap-1">
+              {[1, 3, 6].map(s => (
+                <button key={s} onClick={() => setSimSpeed(s)}
+                  className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${simSpeed === s ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-300' : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                >{s}×</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-auto pt-3 border-t border-white/5">
+            <button onClick={() => { runSim(); setIsPlaying(false); frameRef.current = 0; drawFrame(0); }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+            >Regenerate</button>
+            <button onClick={() => setIsPlaying(p => !p)}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+              style={{ background: isPlaying ? 'rgba(251,113,133,0.2)' : 'rgba(99,102,241,0.8)', border: `1px solid ${isPlaying ? 'rgba(251,113,133,0.4)' : 'rgba(99,102,241,0.6)'}`, boxShadow: isPlaying ? '0 0 15px rgba(251,113,133,0.3)' : '0 0 15px rgba(99,102,241,0.4)' }}
+            >{isPlaying ? '⏸ Pause' : '▶ Simulate'}</button>
+          </div>
+        </div>
+
+        {/* ── Canvas Panel ── */}
+        <div className="flex flex-col gap-3">
+          {/* Main animation canvas */}
+          <div className="glass-panel rounded-xl overflow-hidden" style={{ height: '380px', position: 'relative' }}>
+            <canvas ref={canvasRef} width={800} height={380}
+              style={{ width: '100%', height: '100%', display: 'block' }} />
+
+            {/* Drift status badge */}
+            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background: `${driftStatusColor}22`, border: `1px solid ${driftStatusColor}55`, color: driftStatusColor }}>
+              {driftStatus} — {maxDrift.toFixed(2)}% drift
+            </div>
+          </div>
+
+          {/* ── Mini charts row ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass-panel rounded-xl p-3">
+              <div className="text-[10px] text-cyan-400 font-semibold mb-1 uppercase tracking-widest">Ground Acceleration (g)</div>
+              <canvas ref={pgaCanvasRef} width={400} height={80} style={{ width: '100%', height: '80px', display: 'block' }} />
+            </div>
+            <div className="glass-panel rounded-xl p-3">
+              <div className="text-[10px] text-purple-400 font-semibold mb-1 uppercase tracking-widest">Roof Displacement (cm)</div>
+              <canvas ref={dispCanvasRef} width={400} height={80} style={{ width: '100%', height: '80px', display: 'block' }} />
             </div>
           </div>
         </div>
-
-        {/* Engineering time history graphs */}
-        <div className="grid grid-cols-1 gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-          {/* PGA Graph */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg shadow-inner h-[180px] md:h-[220px]">
-            <Line 
-              data={pgaChartData} 
-              options={getChartOptions('Acceleration [g]', 'Acceleration (g)', -0.6, 0.6)} 
-            />
-          </div>
-          
-          {/* Velocity Graph */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg shadow-inner h-[180px] md:h-[220px]">
-            <Line 
-              data={velocityChartData} 
-              options={getChartOptions('Velocity [cm/sec]', 'Velocity (cm/s)', -140, 80)} 
-            />
-          </div>
-          
-          {/* Displacement Graph */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg shadow-inner h-[180px] md:h-[220px]">
-            <Line 
-              data={displacementChartData} 
-              options={getChartOptions('Displacement [cm]', 'Displacement (cm)', -100, 50)} 
-            />
-          </div>
-        </div>
-        
-        {/* Earthquake parameters controls */}
-        {showControls && (
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-            <h3 className="text-xl font-bold mb-4">Earthquake Parameters</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Magnitude: {magnitude}
-                </label>
-                <input
-                  type="range"
-                  min={4.0}
-                  max={9.0}
-                  step={0.1}
-                  value={magnitude}
-                  onChange={(e) => {
-                    setMagnitude(parseFloat(e.target.value));
-                    
-                    if (simulationMode === 'realistic') {
-                      // Flag for update, but don't regenerate immediately
-                      // This prevents regenerating multiple times during a slider drag
-                      setNeedsDataUpdate(true);
-                    } else {
-                      // Reset graphs when changing parameters in simplified mode
-                      setTimeHistoryData({
-                        time: [],
-                        pga: [],
-                        velocity: [],
-                        displacement: []
-                      });
-                    }
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none dark:bg-gray-700"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>4.0</span>
-                  <span>9.0</span>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Distance (km): {distance}
-                </label>
-                <input
-                  type="range"
-                  min={5}
-                  max={50}
-                  step={1}
-                  value={distance}
-                  onChange={(e) => {
-                    setDistance(parseFloat(e.target.value));
-                    
-                    if (simulationMode === 'realistic') {
-                      // Flag for update
-                      setNeedsDataUpdate(true);
-                    } else {
-                      // Reset graphs when changing parameters in simplified mode
-                      setTimeHistoryData({
-                        time: [],
-                        pga: [],
-                        velocity: [],
-                        displacement: []
-                      });
-                    }
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none dark:bg-gray-700"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>5</span>
-                  <span>50</span>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Soil Type:
-                </label>
-                <select
-                  value={soilType}
-                  onChange={(e) => {
-                    setSoilType(e.target.value);
-                    
-                    if (simulationMode === 'realistic') {
-                      // Flag for update
-                      setNeedsDataUpdate(true);
-                    } else {
-                      // Reset graphs when changing parameters in simplified mode
-                      setTimeHistoryData({
-                        time: [],
-                        pga: [],
-                        velocity: [],
-                        displacement: []
-                      });
-                    }
-                  }}
-                  className="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="rock">Rock</option>
-                  <option value="stiff">Stiff Soil</option>
-                  <option value="soft">Soft Soil</option>
-                  <option value="very-soft">Very Soft Soil</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Building Damping: {(damping * 100).toFixed(0)}%
-                </label>
-          <input
-            type="range"
-                  min={0.01}
-                  max={0.2}
-                  step={0.01}
-                  value={damping}
-                  onChange={(e) => {
-                    setDamping(parseFloat(e.target.value));
-                    
-                    if (simulationMode === 'realistic') {
-                      // Flag for update
-                      setNeedsDataUpdate(true);
-                    } else {
-                      // Reset graphs when changing parameters in simplified mode
-                      setTimeHistoryData({
-                        time: [],
-                        pga: [],
-                        velocity: [],
-                        displacement: []
-                      });
-                    }
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none dark:bg-gray-700"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1%</span>
-                  <span>20%</span>
-                </div>
-        </div>
       </div>
-      
-            {simulationMode === 'realistic' && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Realistic mode uses pre-generated acceleration time histories based on actual earthquake records.
-                  The graphs show characteristic patterns including the quiet period before the earthquake (0-40s),
-                  the main shock (40-55s), and the gradual decay afterward. Adjust parameters to see how different
-                  earthquakes affect the building response.
-                </p>
-              </div>
-            )}
+
+      {/* ── Metrics Strip ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+        {[
+          { label: 'Peak Ground Accel.', value: metrics.pga.toFixed(3), unit: 'g', color: '#22d3ee' },
+          { label: 'Max Roof Displacement', value: metrics.maxDisp.toFixed(1), unit: 'cm', color: '#8b5cf6' },
+          { label: 'Max Story Drift', value: metrics.maxDrift.toFixed(2), unit: '%', color: driftStatusColor },
+          { label: 'Code Drift Limit', value: '2.50', unit: '% (EC8)', color: '#6366f1' },
+        ].map(m => (
+          <div key={m.label} className="glass-panel rounded-xl p-4">
+            <div className="text-2xl font-black font-mono" style={{ color: m.color }}>{m.value}<span className="text-sm font-normal ml-1 text-gray-500">{m.unit}</span></div>
+            <div className="text-[10px] text-gray-500 mt-1">{m.label}</div>
           </div>
-        )}
+        ))}
+      </div>
+
+      {/* ── Drift Ratio Legend ── */}
+      <div className="mt-3 glass-panel rounded-xl p-4">
+        <div className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-widest">Floor Drift Heatmap Legend</div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {[
+            { label: '< 0.75% — Immediate Occupancy', color: '#34d399' },
+            { label: '< 1.5% — Life Safety', color: '#fbbf24' },
+            { label: '< 2.5% — Collapse Prevention', color: '#fb923c' },
+            { label: '> 2.5% — EXCEEDS CODE LIMIT', color: '#fb7185' },
+          ].map(l => (
+            <div key={l.label} className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: l.color, boxShadow: `0 0 6px ${l.color}` }} />
+              <span className="text-gray-400">{l.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-export default SeismicVisualization; 
+export default SeismicVisualization;
