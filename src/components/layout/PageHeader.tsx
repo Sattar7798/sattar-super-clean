@@ -20,27 +20,41 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   return (
     <header 
-      className={`relative w-full ${height} flex items-center justify-center overflow-hidden mb-12 ${className}`}
+      className={`relative mb-12 flex w-full items-center justify-center overflow-hidden border-b border-white/5 bg-[#0b1120] ${height} ${className}`}
     >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.2),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.15),transparent_30%),linear-gradient(180deg,#0d0618_0%,#0b1120_100%)]" />
       {imageUrl && (
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 h-full w-full opacity-30">
           <img 
             src={imageUrl} 
             alt={title} 
-            className="w-full h-full object-cover" 
+            className="h-full w-full object-cover" 
           />
           {overlay && (
-            <div className="absolute inset-0 bg-black bg-opacity-50" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#050816]/30 via-[#0d0618]/65 to-[#0b1120]" />
           )}
         </div>
       )}
 
-      <div className="relative z-10 text-center px-4 py-16 sm:px-6 sm:py-24">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute left-[15%] top-[18%] h-40 w-40 rounded-full bg-violet-600/15 blur-[90px]" />
+        <div className="absolute bottom-[18%] right-[12%] h-36 w-36 rounded-full bg-cyan-500/10 blur-[80px]" />
+      </div>
+
+      <div className="relative z-10 px-4 py-16 text-center sm:px-6 sm:py-24">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.45 }}
+          className="mb-5 inline-flex rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-300"
+        >
+          Sattar Hedayat
+        </motion.div>
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-4xl md:text-5xl font-bold text-white mb-4"
+          className="mb-4 text-4xl font-bold tracking-tight text-white md:text-6xl"
         >
           {title}
         </motion.h1>
@@ -50,7 +64,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-white/80 max-w-3xl mx-auto"
+            className="mx-auto max-w-3xl text-lg leading-8 text-gray-300 md:text-xl"
           >
             {subtitle}
           </motion.p>

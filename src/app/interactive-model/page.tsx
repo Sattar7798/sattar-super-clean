@@ -22,6 +22,7 @@ const tabs = [
       </svg>
     ),
     color: 'violet',
+    badge: 'Live',
   },
   {
     id: 'seismic' as VisualizationTab,
@@ -32,6 +33,7 @@ const tabs = [
       </svg>
     ),
     color: 'cyan',
+    badge: 'Physics',
   },
 
   {
@@ -43,6 +45,7 @@ const tabs = [
       </svg>
     ),
     color: 'emerald',
+    badge: 'AI',
   },
 ];
 
@@ -57,9 +60,9 @@ const inactiveClass = 'border-transparent text-gray-400 hover:text-gray-200 hove
 
 const stats = [
   { label: 'Peak Ground Acc.', value: '0.32g', unit: 'PGA', color: 'text-violet-400' },
-  { label: 'Mode Shapes', value: '6', unit: 'modes', color: 'text-cyan-400' },
+  { label: 'Story Drift Limit', value: '2.50%', unit: 'EC8', color: 'text-cyan-400' },
   { label: 'AI Confidence', value: '94.2%', unit: 'score', color: 'text-emerald-400' },
-  { label: 'Displacement', value: '42.7cm', unit: 'max Δ', color: 'text-rose-400' },
+  { label: 'Roof Displacement', value: '42.7cm', unit: 'max delta', color: 'text-rose-400' },
 ];
 
 export default function InteractiveModelPage() {
@@ -95,12 +98,12 @@ export default function InteractiveModelPage() {
             <h1 className="text-5xl md:text-6xl font-black mb-5 tracking-tight">
               Structural{' '}
               <span className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                Visualizations
+                Interaction Lab
               </span>
             </h1>
             <p className="text-xl text-gray-400 max-w-3xl">
-              Explore cutting-edge interactive models of building structures, seismic responses,
-              and AI-powered structural analysis — all in real-time.
+              Explore interactive building studies, seismic response simulations,
+              and AI-assisted structural analysis in a single experimental workspace.
             </p>
           </motion.div>
 
@@ -168,7 +171,8 @@ export default function InteractiveModelPage() {
                       <h2 className="text-2xl font-bold text-white">Interactive 3D Building Model</h2>
                     </div>
                     <p className="text-gray-400">
-                      Explore a detailed 3D model. Use your mouse to rotate, zoom, and pan to examine structural elements.
+                      Review a conceptual building model with floor-by-floor highlighting, geometry metrics,
+                      and a clean visual summary of the structural system.
                     </p>
                   </div>
                   <div className="p-6">
@@ -180,8 +184,8 @@ export default function InteractiveModelPage() {
                     <div className="mt-6 p-5 rounded-xl bg-violet-950/30 border border-violet-500/10 text-gray-400 text-sm leading-relaxed">
                       <h3 className="text-base font-semibold text-violet-300 mb-2">About This Model</h3>
                       <p>
-                        This 3D model represents a modern reinforced concrete frame structure designed
-                        to withstand seismic forces. It includes columns, beams, floor slabs, and foundations.
+                        This concept model summarizes a reinforced concrete frame with a simplified floor map,
+                        envelope geometry, and structural indicators intended for presentation and rapid review.
                       </p>
                     </div>
                   </div>
@@ -199,16 +203,17 @@ export default function InteractiveModelPage() {
                       <h2 className="text-2xl font-bold text-white">Seismic Response Simulation</h2>
                     </div>
                     <p className="text-gray-400">
-                      Visualize building responses to earthquake forces. Adjust magnitude, distance, and soil type to observe different behaviors.
+                      Visualize drift, displacement, and ground acceleration under different earthquake
+                      scenarios by adjusting magnitude, damping, distance, and soil class.
                     </p>
                   </div>
                   <div className="p-6">
                     <SeismicVisualization initialIntensity={0.3} className="rounded-xl" />
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                       {[
-                        { title: 'PGA vs. Time', desc: 'Measures maximum acceleration experienced by the ground — a key seismic design parameter.' },
-                        { title: 'Velocity vs. Time', desc: 'Shows ground movement speed, correlating with energy transfer to structures.' },
-                        { title: 'Displacement vs. Time', desc: 'Displays building movement under ground motion, revealing structural performance.' },
+                        { title: 'Ground Acceleration', desc: 'Tracks the intensity of shaking over time and highlights peak demand on the structure.' },
+                        { title: 'Drift Response', desc: 'Shows how story drift evolves relative to code-oriented thresholds and warning ranges.' },
+                        { title: 'Roof Displacement', desc: 'Summarizes lateral movement so structural response is readable at a glance.' },
                       ].map((item) => (
                         <div key={item.title} className="p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/10">
                           <h4 className="font-semibold text-cyan-300 mb-1">{item.title}</h4>
@@ -233,7 +238,8 @@ export default function InteractiveModelPage() {
                       <h2 className="text-2xl font-bold text-white">AI-Powered Structural Analysis</h2>
                     </div>
                     <p className="text-gray-400">
-                      Explore how artificial intelligence analyzes building structures to identify potential weaknesses and optimize designs for seismic performance.
+                      Explore how AI can classify structural performance, interpret engineering signals,
+                      and support design decisions for resilience-focused workflows.
                     </p>
                   </div>
                   <div className="p-6">
@@ -243,7 +249,8 @@ export default function InteractiveModelPage() {
                     <div className="mt-6 p-5 rounded-xl bg-emerald-950/20 border border-emerald-500/10">
                       <h3 className="font-semibold text-emerald-300 mb-2">The Future of Structural Engineering</h3>
                       <p className="text-gray-400 text-sm leading-relaxed">
-                        AI-powered analysis represents the cutting edge of structural engineering, enabling more precise predictions of building behavior and optimizing design decisions for safety, efficiency, and resilience.
+                        AI-assisted analysis can accelerate engineering review, expose patterns in complex
+                        response data, and support faster, more informed decisions in BIM and structural workflows.
                       </p>
                     </div>
                   </div>
