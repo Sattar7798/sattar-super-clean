@@ -1,8 +1,9 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Syne } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const syne = Syne({ subsets: ['latin'], variable: '--font-syne', weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
   title: 'Sattar Hedayat | Structural Engineering & Seismic Analysis',
@@ -24,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} antialiased`}>
-      <body className="bg-[#0f172a] text-gray-200">
+    <html lang="en" className={`${inter.variable} ${syne.variable} antialiased`}>
+      <body className="bg-cream text-forest">
         {children}
       </body>
     </html>

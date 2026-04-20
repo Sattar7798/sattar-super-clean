@@ -2,441 +2,484 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import Container from '@/components/layout/Container';
-import Section from '@/components/layout/Section';
-import PageHeader from '@/components/layout/PageHeader';
-import { EmailIcon, PhoneIcon, LocationIcon, ClockIcon } from '@/components/ui/Icons';
+import Link from 'next/link';
 import Layout from '@/components/layout/LayoutFix';
+import DotField from '@/components/animations/DotField';
+import { EmailIcon, PhoneIcon, LocationIcon, ExternalLinkIcon } from '@/components/ui/Icons';
 
-// Define types for form data and form status
 interface FormData {
   name: string;
   email: string;
+  category: string;
   subject: string;
   message: string;
-  category: string;
 }
 
-interface FormStatus {
-  isSubmitting: boolean;
-  isSubmitted: boolean;
-  error: string | null;
+function CountUp({ to, suffix = '', duration = 1800 }: { to: number; suffix?: string; duration?: number }) {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const [value, setValue] = React.useState(0);
+  const [started, setStarted] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ref.current || started) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setStarted(true);
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [started]);
+
+  React.useEffect(() => {
+    if (!started) return;
+
+    let raf = 0;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * to));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [duration, started, to]);
+
+  return (
+    <span ref={ref}>
+      {value}
+      {suffix}
+    </span>
+  );
 }
 
-interface ContactInfo {
-  icon: React.ReactNode;
-  title: string;
-  content: string;
-  link?: string;
-  secondary?: string;
-}
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 28 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+});
 
-interface Category {
-  value: string;
-  label: string;
-}
+const fadeUpView = (delay = 0) => ({
+  initial: { opacity: 0, y: 28 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.65, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+});
+
+const inputClass =
+  'w-full px-4 py-3 bg-[#FFF8EC] border border-[#DCCCAC]/70 rounded-xl text-[#2d3d24] placeholder-[#546B41]/35 text-sm outline-none transition-all duration-200 focus:border-[#99AD7A] focus:ring-2 focus:ring-[#99AD7A]/20';
+
+const labelClass = 'block text-[#546B41] font-semibold mb-2 text-xs uppercase tracking-wide';
+
+const collaborationCards = [
+  {
+    title: 'BIM Coordination',
+    description: 'Infrastructure, public-sector, and multidisciplinary BIM coordination support.',
+    category: 'bim',
+  },
+  {
+    title: 'Automation & Tools',
+    description: 'pyRevit, Dynamo, CME workflows, reporting, and BIM process acceleration.',
+    category: 'automation',
+  },
+  {
+    title: 'Research & Academic',
+    description: 'Publications, technical writing, seismic research, and engineering collaboration.',
+    category: 'research',
+  },
+];
 
 export default function ContactPage() {
-  // Form state
   const [formData, setFormData] = React.useState<FormData>({
     name: '',
     email: '',
+    category: 'general',
     subject: '',
     message: '',
-    category: 'general'
-  });
-  const [formStatus, setFormStatus] = React.useState<FormStatus>({
-    isSubmitting: false,
-    isSubmitted: false,
-    error: null
   });
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: FormData) => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.target;
+    setFormData((previous) => ({ ...previous, [name]: value }));
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormStatus({ isSubmitting: true, isSubmitted: false, error: null });
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    try {
-      // Here you would normally send the form data to your backend
-      // This is a simulation of the API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Reset form and show success
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-        category: 'general'
-      });
-      setFormStatus({ isSubmitting: false, isSubmitted: true, error: null });
-    } catch (error) {
-      setFormStatus({ 
-        isSubmitting: false, 
-        isSubmitted: false, 
-        error: 'There was an error submitting your message. Please try again later.'
-      });
-    }
+    const subject = `[${formData.category}] ${formData.subject}`.trim();
+    const body = [
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Category: ${formData.category}`,
+      '',
+      formData.message,
+    ].join('\n');
+
+    window.location.href = `mailto:sattarhedayat2020@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
-
-  // Contact information
-  const contactInfo: ContactInfo[] = [
-    {
-      icon: <EmailIcon className="w-5 h-5" />,
-      title: 'Email',
-      content: 'hedayat.1996509@studenti.uniroma1.it',
-      link: 'mailto:hedayat.1996509@studenti.uniroma1.it'
-    },
-    {
-      icon: <PhoneIcon className="w-5 h-5" />,
-      title: 'Phone',
-      content: '+39 388 9784912',
-      link: 'tel:+393889784912'
-    },
-    {
-      icon: <LocationIcon className="w-5 h-5" />,
-      title: 'Office',
-      content: 'Roma, Italy',
-      link: 'https://maps.google.com/?q=Sapienza+University+Roma+Italy'
-    },
-    {
-      icon: <ClockIcon className="w-5 h-5" />,
-      title: 'Office Hours',
-      content: 'Monday & Wednesday: 2:00 PM - 4:00 PM',
-      secondary: 'or by appointment'
-    }
-  ];
-
-  // Topic categories
-  const categories: Category[] = [
-    { value: 'general', label: 'General Inquiry' },
-    { value: 'research', label: 'Research Collaboration' },
-    { value: 'speaking', label: 'Speaking Engagement' },
-    { value: 'student', label: 'Prospective Student' },
-    { value: 'consulting', label: 'Engineering Consultation' }
-  ];
 
   return (
     <Layout>
-      <PageHeader
-        title="Contact Me"
-        subtitle="Get in touch for research collaborations, speaking engagements, or consultations"
-        imageUrl="/assets/images/contact-header.jpg"
-      />
+      <section className="relative min-h-[82vh] flex items-center bg-[#1e2d14] overflow-hidden">
+        <div className="absolute inset-0">
+          <DotField
+            gradientFrom="rgba(84,107,65,0.48)"
+            gradientTo="rgba(153,173,122,0.26)"
+            glowColor="#1e2d14"
+            dotSpacing={20}
+            dotRadius={1.15}
+            bulgeStrength={60}
+            waveAmplitude={0}
+          />
+        </div>
 
-      <Container>
-        <Section>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Contact information */}
-            <div className="lg:col-span-1">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="glass-panel rounded-2xl p-6"
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="contact-grid" width="56" height="56" patternUnits="userSpaceOnUse">
+                <path d="M 56 0 L 0 0 0 56" fill="none" stroke="#FFF8EC" strokeWidth="0.7" />
+                <path d="M 0 56 L 56 0" fill="none" stroke="#99AD7A" strokeWidth="0.35" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#contact-grid)" />
+          </svg>
+        </div>
+
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[14%] left-[12%] w-[34rem] h-[34rem] rounded-full bg-[#546B41]/28 blur-[150px]" />
+          <div className="absolute bottom-[10%] right-[10%] w-[26rem] h-[26rem] rounded-full bg-[#99AD7A]/14 blur-[120px]" />
+        </div>
+
+        <div className="container mx-auto px-6 pt-28 pb-20 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.06fr_0.94fr] gap-14 items-end">
+            <div>
+              <motion.div {...fadeUp()} className="flex items-center gap-4 mb-8">
+                <div className="h-px w-12 bg-[#99AD7A]/45" />
+                <span className="text-[#99AD7A] text-xs font-bold tracking-[0.22em] uppercase">
+                  Contact
+                </span>
+              </motion.div>
+
+              <motion.h1
+                {...fadeUp(0.08)}
+                className="font-black leading-[0.9] tracking-[-0.05em] mb-7"
               >
-                <h2 className="text-2xl font-bold mb-6 text-white">Contact Information</h2>
-                <div className="space-y-6">
-                  {contactInfo.map((item, index) => (
-                    <div key={index} className="flex">
-                      <div className="text-indigo-400 mr-4 mt-0.5">
-                        {item.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white text-sm">
-                          {item.title}
-                        </h3>
-                        {item.link ? (
-                          <a 
-                            href={item.link} 
-                            className="text-gray-400 hover:text-indigo-300 transition-colors text-sm"
-                            target={item.link.startsWith('http') ? '_blank' : undefined}
-                            rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
-                          >
-                            {item.content}
-                          </a>
-                        ) : (
-                          <p className="text-gray-400 text-sm">{item.content}</p>
-                        )}
-                        {item.secondary && (
-                          <p className="text-gray-500 text-xs mt-1">
-                            {item.secondary}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <span className="block text-[clamp(3.9rem,10vw,8.2rem)] text-[#FFF8EC]">Let&apos;s</span>
+                <span className="block text-[clamp(3.9rem,10vw,8.2rem)] text-gradient-nature">Connect.</span>
+              </motion.h1>
 
-                <div className="mt-8 pt-6 border-t border-white/5">
-                  <h3 className="font-semibold text-white text-sm mb-2">
-                    Direct Email
-                  </h3>
-                  <a 
-                    href="mailto:sattarhedayat2020@gmail.com"
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm break-all"
-                  >
-                    sattarhedayat2020@gmail.com
-                  </a>
-                </div>
+              <motion.p
+                {...fadeUp(0.18)}
+                className="max-w-2xl text-base md:text-lg leading-relaxed text-[#DCCCAC]/68"
+              >
+                Open to BIM coordination, automation workflows, structural engineering discussions,
+                research collaboration, and engineering-focused digital projects.
+              </motion.p>
+
+              <motion.div {...fadeUp(0.28)} className="flex flex-col sm:flex-row gap-4 mt-9">
+                <a
+                  href="mailto:sattarhedayat2020@gmail.com"
+                  className="px-7 py-3.5 bg-[#99AD7A] text-[#1e2d14] rounded-xl font-bold text-sm shadow-[0_0_28px_rgba(153,173,122,0.35)] hover:bg-[#b8c99a] hover:-translate-y-1 transition-all duration-300"
+                >
+                  Email Directly
+                </a>
+                <Link
+                  href="/works"
+                  className="px-7 py-3.5 border border-[#99AD7A]/25 text-[#DCCCAC] rounded-xl font-semibold text-sm hover:border-[#99AD7A]/50 hover:bg-[#546B41]/25 hover:-translate-y-1 transition-all duration-300"
+                >
+                  View Projects
+                </Link>
               </motion.div>
             </div>
 
-            {/* Contact form */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:col-span-2"
-            >
-              <div className="glass-panel rounded-2xl p-6">
-                <h2 className="text-2xl font-bold mb-6 text-white">Send a Message</h2>
-                
-                {formStatus.isSubmitted ? (
-                  <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-800 rounded-lg p-6 text-center">
-                    <div className="text-green-600 dark:text-green-400 text-4xl mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-green-800 dark:text-green-300 mb-2">
-                      Message Sent Successfully!
-                    </h3>
-                    <p className="text-green-700 dark:text-green-400 mb-4">
-                      Thank you for reaching out. I will respond to your message as soon as possible.
-                    </p>
-                    <button
-                      onClick={() => setFormStatus((prev: FormStatus) => ({ ...prev, isSubmitted: false }))}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      Send Another Message
-                    </button>
+            <motion.div {...fadeUp(0.34)} className="grid grid-cols-2 gap-4 max-w-[28rem] lg:ml-auto">
+              {[
+                { label: 'Cities', to: 2, suffix: '' },
+                { label: 'Phone Line', to: 1, suffix: '' },
+                { label: 'Direct Email', to: 1, suffix: '' },
+                { label: 'Main Routes', to: 3, suffix: '' },
+              ].map((item, index) => (
+                <div key={item.label} className="glass-panel-dark rounded-[2rem] px-5 py-6 min-h-[150px] flex flex-col justify-between">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-[#DCCCAC]/42">{item.label}</div>
+                  <div className="stat-callout text-[clamp(2.7rem,6vw,4.2rem)] text-[#b8c99a] leading-none">
+                    <CountUp to={item.to} suffix={item.suffix} duration={1400 + index * 180} />
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {formStatus.error && (
-                      <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400 mb-4">
-                        {formStatus.error}
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label htmlFor="name" className="block text-gray-300 font-medium mb-2 text-sm">
-                          Name <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
-                          placeholder="Your name"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label htmlFor="email" className="block text-gray-300 font-medium mb-2 text-sm">
-                          Email <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
-                          placeholder="Your email address"
-                        />
-                      </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-28 bg-[#FFF8EC] overflow-hidden">
+        <div className="absolute top-0 inset-x-0 h-px divider-organic" />
+        <div className="absolute -top-16 right-0 w-[46rem] h-[46rem] rounded-full bg-[#99AD7A]/08 blur-[150px] pointer-events-none" />
+
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[0.76fr_1.24fr] gap-8 items-start">
+            <motion.div {...fadeUpView()} className="rounded-3xl card-warm p-8 md:p-10">
+              <p className="label-dash text-[#99AD7A] text-xs font-bold tracking-[0.22em] uppercase mb-5">
+                Direct Contact
+              </p>
+              <h2 className="text-4xl md:text-5xl font-black text-[#1e2d14] leading-tight mb-5">
+                Reach out through
+                <br />
+                <span className="text-gradient-forest">real channels.</span>
+              </h2>
+              <p className="text-sm md:text-base leading-relaxed text-[#546B41]/62 mb-8">
+                This section uses your actual contact details from the CV and removes the old
+                placeholder lab and office-hour content.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: <EmailIcon className="w-5 h-5" />,
+                    title: 'Email',
+                    primary: 'sattarhedayat2020@gmail.com',
+                    href: 'mailto:sattarhedayat2020@gmail.com',
+                    secondary: 'Best for project, research, and collaboration inquiries',
+                  },
+                  {
+                    icon: <PhoneIcon className="w-5 h-5" />,
+                    title: 'Phone',
+                    primary: '(+39) 388 978 4912',
+                    href: 'tel:+393889784912',
+                    secondary: 'Italy',
+                  },
+                  {
+                    icon: <LocationIcon className="w-5 h-5" />,
+                    title: 'Location',
+                    primary: 'Rieti / Rome, Italy',
+                    href: 'https://maps.google.com/?q=Rieti+Italy',
+                    secondary: 'Available for local and remote collaboration',
+                  },
+                ].map((item) => (
+                  <a
+                    key={item.title}
+                    href={item.href}
+                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                    rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                    className="flex items-start gap-4 rounded-2xl border border-[#546B41]/12 bg-[#546B41]/05 px-5 py-5 hover:border-[#99AD7A]/35 transition-all duration-300"
+                  >
+                    <div className="w-11 h-11 rounded-2xl bg-[#546B41]/10 text-[#546B41] flex items-center justify-center flex-shrink-0">
+                      {item.icon}
                     </div>
-                    
-                    <div>
-                      <label htmlFor="category" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                        Category
-                      </label>
-                      <select
-                        id="category"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white text-sm outline-none transition-all"
-                      >
-                        {categories.map((category) => (
-                          <option key={category.value} value={category.value}>
-                            {category.label}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-[#99AD7A] font-bold mb-1">{item.title}</div>
+                      <div className="text-sm md:text-base font-semibold text-[#1e2d14] break-all">{item.primary}</div>
+                      <div className="text-sm text-[#546B41]/58 mt-1">{item.secondary}</div>
                     </div>
-                    
-                    <div>
-                      <label htmlFor="subject" className="block text-gray-300 font-medium mb-2 text-sm">
-                        Subject <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all"
-                        placeholder="Subject of your message"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="message" className="block text-gray-300 font-medium mb-2 text-sm">
-                        Message <span className="text-red-400">*</span>
-                      </label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                        rows={6}
-                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-indigo-500 focus:border-indigo-400 text-white placeholder-gray-500 text-sm outline-none transition-all resize-none"
-                        placeholder="Your message"
-                      ></textarea>
-                    </div>
-                    
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={formStatus.isSubmitting}
-                        className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] ${
-                          formStatus.isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]'
-                        }`}
-                      >
-                        {formStatus.isSubmitting ? 'Sending...' : 'Send Message'}
-                      </button>
-                    </div>
-                  </form>
-                )}
+                  </a>
+                ))}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-[#DCCCAC]/60">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-[#99AD7A] font-bold mb-3">Profiles</div>
+                <div className="flex flex-col gap-3">
+                  <a
+                    href="https://www.linkedin.com/in/sattar-hedayat/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#546B41] hover:text-[#2d3d24]"
+                  >
+                    LinkedIn
+                    <ExternalLinkIcon className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="https://github.com/sattarhedayat"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#546B41] hover:text-[#2d3d24]"
+                  >
+                    GitHub
+                    <ExternalLinkIcon className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             </motion.div>
+
+            <motion.div {...fadeUpView(0.08)} className="rounded-3xl card-warm p-8 md:p-10">
+              <p className="label-dash text-[#99AD7A] text-xs font-bold tracking-[0.22em] uppercase mb-5">
+                Send a Message
+              </p>
+              <h2 className="text-3xl md:text-4xl font-black text-[#1e2d14] leading-tight mb-4">
+                Use the form to
+                <br />
+                <span className="text-gradient-forest">draft an email.</span>
+              </h2>
+              <p className="text-sm md:text-base leading-relaxed text-[#546B41]/62 mb-8">
+                There is no fake submission flow here. The form opens your email client with the
+                message details prefilled so the contact method stays transparent.
+              </p>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label htmlFor="name" className={labelClass}>Name</label>
+                    <input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className={inputClass}
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className={labelClass}>Email</label>
+                    <input
+                      id="email"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className={inputClass}
+                      placeholder="Your email"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="category" className={labelClass}>Category</label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className={inputClass}
+                  >
+                    <option value="general">General inquiry</option>
+                    <option value="bim">BIM coordination</option>
+                    <option value="automation">Automation & tools</option>
+                    <option value="research">Research collaboration</option>
+                    <option value="structural">Structural engineering</option>
+                    <option value="web">Web / visualization work</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="subject" className={labelClass}>Subject</label>
+                  <input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="Subject"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="message" className={labelClass}>Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows={7}
+                    className={`${inputClass} resize-none`}
+                    placeholder="Describe the project, collaboration, or question."
+                  />
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="px-7 py-3 bg-[#546B41] text-[#FFF8EC] rounded-xl font-semibold hover:bg-[#3d5030] hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(84,107,65,0.4)] transition-all duration-300"
+                  >
+                    Draft Email
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </Section>
-        
-        <Section className="py-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Visit the Lab</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-8">
-              Smart Structures Laboratory is located in Building 5, Sapienza University Campus, Roma, Italy. Visitors are welcome during open house events or by appointment.
+        </div>
+      </section>
+
+      <section className="relative py-24 bg-[#FFF8EC]">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {collaborationCards.map((card, index) => (
+              <motion.button
+                key={card.title}
+                type="button"
+                {...fadeUpView(index * 0.08)}
+                onClick={() => setFormData((previous) => ({ ...previous, category: card.category }))}
+                className="text-left rounded-3xl card-warm p-7 hover:shadow-nature-lg hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="text-[10px] uppercase tracking-[0.2em] text-[#99AD7A] font-bold mb-3">Quick Route</div>
+                <h3 className="text-xl font-black text-[#1e2d14] mb-3">{card.title}</h3>
+                <p className="text-sm leading-relaxed text-[#546B41]/62 mb-4">{card.description}</p>
+                <span className="text-sm font-semibold text-[#546B41]">Use this category</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative pt-20 pb-8 md:pt-24 md:pb-10 bg-[#546B41] overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="contact-cta-grid" width="56" height="56" patternUnits="userSpaceOnUse">
+                <path d="M 56 0 L 0 0 0 56" fill="none" stroke="#FFF8EC" strokeWidth="0.7" />
+                <path d="M 0 0 L 56 56" fill="none" stroke="#FFF8EC" strokeWidth="0.35" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#contact-cta-grid)" />
+          </svg>
+        </div>
+
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[28rem] h-[28rem] rounded-full bg-[#99AD7A]/18 blur-[140px]" />
+          <div className="absolute bottom-0 right-1/4 w-[24rem] h-[24rem] rounded-full bg-[#2d3d24]/45 blur-[110px]" />
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10">
+          <motion.div {...fadeUpView()} className="glass-panel-dark rounded-3xl p-10 md:p-12 max-w-4xl mx-auto text-center">
+            <p className="label-dash justify-center text-[#99AD7A] text-xs font-bold tracking-[0.22em] uppercase mb-6">
+              Continue
             </p>
-            <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2969.654886661852!2d12.512792076464198!3d41.90375547115468!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f61a650625e5f%3A0x8b5edd1c4c986e59!2sSapienza%20University%20of%20Rome!5e0!3m2!1sen!2sit!4v1654314841097!5m2!1sen!2sit"
-                width="100%"
-                height="450"
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-                title="Lab Location Map"
-              ></iframe>
+            <h2 className="text-4xl md:text-5xl font-black text-[#FFF8EC] leading-tight mb-5">
+              Want to review the profile
+              <br />
+              <span className="text-gradient-nature">before getting in touch?</span>
+            </h2>
+            <p className="max-w-2xl mx-auto text-base leading-relaxed text-[#DCCCAC]/65 mb-10">
+              Go back to the about section or explore the works archive to see the context behind
+              the collaboration areas listed here.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/about"
+                className="px-8 py-4 bg-[#FFF8EC] text-[#1e2d14] rounded-xl font-bold hover:bg-[#DCCCAC] hover:-translate-y-1 transition-all duration-300"
+              >
+                View About
+              </Link>
+              <Link
+                href="/works"
+                className="px-8 py-4 border border-[#99AD7A]/24 text-[#FFF8EC] rounded-xl font-semibold hover:bg-[#2d3d24]/28 hover:border-[#99AD7A]/45 hover:-translate-y-1 transition-all duration-300"
+              >
+                View Works
+              </Link>
             </div>
-          </div>
-        </Section>
-        
-        <Section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="glass-panel rounded-2xl p-6"
-            >
-              <h3 className="text-xl font-bold mb-4 text-white">For Students</h3>
-              <p className="text-gray-400 mb-4 text-sm">
-                Interested in joining my research team? Prospective graduate students should include their research interests, CV, and academic background in their message.
-              </p>
-              <a 
-                href="#"
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.preventDefault();
-                  setFormData((prev: FormData) => ({ ...prev, category: 'student' }));
-                  const categoryElement = document.getElementById('category');
-                  if (categoryElement) {
-                    categoryElement.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
-              >
-                Apply as a Research Assistant →
-              </a>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="glass-panel rounded-2xl p-6"
-            >
-              <h3 className="text-xl font-bold mb-4 text-white">For Research Collaborators</h3>
-              <p className="text-gray-400 mb-4 text-sm">
-                I welcome collaborations with other researchers and institutions on projects related to structural engineering, seismic analysis, and AI integration.
-              </p>
-              <a 
-                href="#"
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.preventDefault();
-                  setFormData((prev: FormData) => ({ ...prev, category: 'research' }));
-                  const categoryElement = document.getElementById('category');
-                  if (categoryElement) {
-                    categoryElement.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
-              >
-                Propose a Collaboration →
-              </a>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="glass-panel rounded-2xl p-6"
-            >
-              <h3 className="text-xl font-bold mb-4 text-white">For Industry Partners</h3>
-              <p className="text-gray-400 mb-4 text-sm">
-                Looking for expert consultation on structural engineering problems or AI-enhanced solutions? I provide consulting services for industry partners.
-              </p>
-              <a 
-                href="#"
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.preventDefault();
-                  setFormData((prev: FormData) => ({ ...prev, category: 'consulting' }));
-                  const categoryElement = document.getElementById('category');
-                  if (categoryElement) {
-                    categoryElement.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
-              >
-                Request a Consultation →
-              </a>
-            </motion.div>
-          </div>
-        </Section>
-      </Container>
+          </motion.div>
+        </div>
+      </section>
     </Layout>
   );
-} 
+}

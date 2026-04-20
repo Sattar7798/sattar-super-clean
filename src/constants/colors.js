@@ -1,207 +1,210 @@
 /**
- * Color constants for consistent styling across the website
+ * Color constants — earthy biophilic palette
+ * Forest (#546B41) · Sage (#99AD7A) · Beige (#DCCCAC) · Cream (#FFF8EC)
  */
 
-// Primary brand colors
+export const PALETTE = {
+  FOREST:  '#546B41',
+  FOREST_DARK:  '#2d3d24',
+  FOREST_DEEP:  '#1e2d14',
+  FOREST_LIGHT: '#6b8a52',
+  SAGE:    '#99AD7A',
+  SAGE_LIGHT: '#b8c99a',
+  SAGE_DARK:  '#7a9060',
+  BEIGE:   '#DCCCAC',
+  BEIGE_LIGHT: '#efe4cc',
+  BEIGE_DARK:  '#c8b48c',
+  CREAM:   '#FFF8EC',
+  CREAM_DARK:  '#f5edd8',
+};
+
+// Brand scale (Tailwind-compatible shades)
 export const BRAND = {
   PRIMARY: {
-    50: '#e3f2fd',
-    100: '#bbdefb',
-    200: '#90caf9',
-    300: '#64b5f6',
-    400: '#42a5f5',
-    500: '#2196f3', // Main primary color
-    600: '#1e88e5',
-    700: '#1976d2',
-    800: '#1565c0',
-    900: '#0d47a1',
+    50:  '#f2f6ee',
+    100: '#dce8d3',
+    200: '#bbd3a8',
+    300: '#99AD7A',   // sage
+    400: '#7a9060',
+    500: '#546B41',   // forest — main
+    600: '#3d5030',
+    700: '#2d3d24',   // forest dark
+    800: '#1e2d14',   // forest deep
+    900: '#111a0c',
   },
   SECONDARY: {
-    50: '#e8f5e9',
-    100: '#c8e6c9',
-    200: '#a5d6a7',
-    300: '#81c784',
-    400: '#66bb6a',
-    500: '#4caf50', // Main secondary color
-    600: '#43a047',
-    700: '#388e3c',
-    800: '#2e7d32',
-    900: '#1b5e20',
+    50:  '#fdfaf4',
+    100: '#f5edd8',
+    200: '#efe4cc',
+    300: '#e5d8bb',
+    400: '#DCCCAC',   // beige — main
+    500: '#c8b48c',
+    600: '#b09a6e',
+    700: '#8a7554',
+    800: '#63543c',
+    900: '#3c3323',
   },
   ACCENT: {
-    50: '#fff8e1',
-    100: '#ffecb3',
-    200: '#ffe082',
-    300: '#ffd54f',
-    400: '#ffca28',
-    500: '#ffc107', // Main accent color
-    600: '#ffb300',
-    700: '#ffa000',
-    800: '#ff8f00',
-    900: '#ff6f00',
+    50:  '#fffdf8',
+    100: '#FFF8EC',   // cream — main
+    200: '#f5edd8',
+    300: '#ecdec5',
+    400: '#e0ccac',
+    500: '#d4ba93',
+    600: '#c0a070',
+    700: '#a07848',
+    800: '#7a5830',
+    900: '#523818',
   },
 };
 
-// Basic colors
 export const BASIC = {
   WHITE: '#ffffff',
   BLACK: '#000000',
-  
   GRAY: {
-    50: '#fafafa',
-    100: '#f5f5f5',
-    200: '#eeeeee',
-    300: '#e0e0e0',
-    400: '#bdbdbd',
-    500: '#9e9e9e',
-    600: '#757575',
-    700: '#616161',
-    800: '#424242',
-    900: '#212121',
+    50:  '#fafaf9',
+    100: '#f5f5f0',
+    200: '#e8e5de',
+    300: '#d4cfc4',
+    400: '#b8b0a0',
+    500: '#968d7c',
+    600: '#756c5c',
+    700: '#5a5245',
+    800: '#3d3830',
+    900: '#21201c',
   },
 };
 
-// Dark mode colors
 export const DARK = {
   BACKGROUND: {
-    DEFAULT: '#121212',
-    PAPER: '#1e1e1e',
-    ELEVATED: '#2d2d2d',
+    DEFAULT: '#1e2d14',
+    PAPER:   '#2d3d24',
+    ELEVATED: '#3d5030',
   },
   TEXT: {
-    PRIMARY: 'rgba(255, 255, 255, 0.87)',
-    SECONDARY: 'rgba(255, 255, 255, 0.6)',
-    DISABLED: 'rgba(255, 255, 255, 0.38)',
+    PRIMARY:   '#FFF8EC',
+    SECONDARY: 'rgba(255, 248, 236, 0.72)',
+    MUTED:     'rgba(220, 204, 172, 0.6)',
+    DISABLED:  'rgba(220, 204, 172, 0.35)',
   },
 };
 
-// Light mode colors
 export const LIGHT = {
   BACKGROUND: {
-    DEFAULT: '#ffffff',
-    PAPER: '#f5f5f5',
+    DEFAULT: '#FFF8EC',
+    PAPER:   '#f5edd8',
     ELEVATED: '#ffffff',
   },
   TEXT: {
-    PRIMARY: 'rgba(0, 0, 0, 0.87)',
-    SECONDARY: 'rgba(0, 0, 0, 0.6)',
-    DISABLED: 'rgba(0, 0, 0, 0.38)',
+    PRIMARY:   '#546B41',
+    SECONDARY: 'rgba(84, 107, 65, 0.72)',
+    MUTED:     'rgba(84, 107, 65, 0.5)',
+    DISABLED:  'rgba(84, 107, 65, 0.35)',
   },
 };
 
-// Semantic colors
 export const SEMANTIC = {
   SUCCESS: {
-    LIGHT: '#4caf50',
-    MAIN: '#2e7d32',
-    DARK: '#1b5e20',
-    CONTRAST: '#ffffff',
+    LIGHT: '#99AD7A',
+    MAIN:  '#546B41',
+    DARK:  '#2d3d24',
+    CONTRAST: '#FFF8EC',
   },
   ERROR: {
     LIGHT: '#ef5350',
-    MAIN: '#d32f2f',
-    DARK: '#c62828',
+    MAIN:  '#d32f2f',
+    DARK:  '#c62828',
     CONTRAST: '#ffffff',
   },
   WARNING: {
-    LIGHT: '#ff9800',
-    MAIN: '#ed6c02',
-    DARK: '#e65100',
-    CONTRAST: '#ffffff',
+    LIGHT: '#ffb74d',
+    MAIN:  '#ffa000',
+    DARK:  '#e65100',
+    CONTRAST: '#1e2d14',
   },
   INFO: {
-    LIGHT: '#03a9f4',
-    MAIN: '#0288d1',
-    DARK: '#01579b',
-    CONTRAST: '#ffffff',
+    LIGHT: '#DCCCAC',
+    MAIN:  '#99AD7A',
+    DARK:  '#546B41',
+    CONTRAST: '#1e2d14',
   },
 };
 
-// Specific domain-related colors
 export const DOMAIN = {
-  // Structural engineering related colors
   STRUCTURAL: {
-    CONCRETE: '#b0bec5',
-    STEEL: '#78909c',
-    GLASS: '#e1f5fe',
-    WOOD: '#8d6e63',
+    CONCRETE: '#DCCCAC',
+    STEEL:    '#99AD7A',
+    GLASS:    '#e8f5e9',
+    WOOD:     '#c8b48c',
   },
-  
-  // Seismic analysis related colors
   SEISMIC: {
-    LOW: '#66bb6a',
-    MODERATE: '#ffb74d',
-    HIGH: '#ef5350',
+    LOW:      '#99AD7A',
+    MODERATE: '#DCCCAC',
+    HIGH:     '#e8a060',
     CRITICAL: '#d32f2f',
   },
-  
-  // AI/ML related colors
   AI: {
-    NEURAL: '#8e24aa',
-    PREDICTION: '#1e88e5',
-    ANALYSIS: '#00897b',
-    VISION: '#7cb342',
+    NEURAL:     '#546B41',
+    PREDICTION: '#99AD7A',
+    ANALYSIS:   '#DCCCAC',
+    VISION:     '#7a9060',
   },
-  
-  // Chart colors
   CHART: {
     SERIES: [
-      '#1f77b4', // blue
-      '#ff7f0e', // orange
-      '#2ca02c', // green
-      '#d62728', // red
-      '#9467bd', // purple
-      '#8c564b', // brown
-      '#e377c2', // pink
-      '#7f7f7f', // gray
-      '#bcbd22', // olive
-      '#17becf'  // teal
+      '#546B41',
+      '#99AD7A',
+      '#DCCCAC',
+      '#7a9060',
+      '#b8c99a',
+      '#c8b48c',
+      '#2d3d24',
+      '#efe4cc',
+      '#3d5030',
+      '#e0ccac',
     ],
     SEQUENTIAL: [
-      '#d0d1e6',
-      '#a6bddb',
-      '#74a9cf',
-      '#3690c0',
-      '#0570b0',
-      '#034e7b'
+      '#f2f6ee',
+      '#bbd3a8',
+      '#99AD7A',
+      '#7a9060',
+      '#546B41',
+      '#2d3d24',
     ],
     DIVERGING: [
-      '#d73027',
-      '#f46d43',
-      '#fdae61',
-      '#fee090',
-      '#e0f3f8',
-      '#abd9e9',
-      '#74add1',
-      '#4575b4'
+      '#d32f2f',
+      '#e8a060',
+      '#DCCCAC',
+      '#FFF8EC',
+      '#b8c99a',
+      '#99AD7A',
+      '#546B41',
+      '#2d3d24',
     ],
   },
 };
 
-// Gradients
 export const GRADIENTS = {
-  PRIMARY: 'linear-gradient(135deg, #1976d2 0%, #64b5f6 100%)',
-  SECONDARY: 'linear-gradient(135deg, #388e3c 0%, #81c784 100%)',
-  ACCENT: 'linear-gradient(135deg, #ffa000 0%, #ffd54f 100%)',
-  SUCCESS: 'linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%)',
-  ERROR: 'linear-gradient(135deg, #c62828 0%, #ef5350 100%)',
-  DARK: 'linear-gradient(135deg, #212121 0%, #424242 100%)',
-  SEISMIC: 'linear-gradient(90deg, #66bb6a 0%, #ffb74d 50%, #ef5350 100%)',
+  PRIMARY:  'linear-gradient(135deg, #546B41 0%, #99AD7A 100%)',
+  SECONDARY:'linear-gradient(135deg, #DCCCAC 0%, #FFF8EC 100%)',
+  NATURE:   'linear-gradient(135deg, #546B41 0%, #99AD7A 50%, #DCCCAC 100%)',
+  DARK:     'linear-gradient(135deg, #1e2d14 0%, #2d3d24 100%)',
+  WARM:     'linear-gradient(135deg, #FFF8EC 0%, #DCCCAC 100%)',
+  SEISMIC:  'linear-gradient(90deg, #99AD7A 0%, #DCCCAC 50%, #e8a060 100%)',
 };
 
-// TailwindCSS specific color mapping
 export const TAILWIND = {
-  primary: BRAND.PRIMARY,
+  primary:   BRAND.PRIMARY,
   secondary: BRAND.SECONDARY,
-  accent: BRAND.ACCENT,
-  success: SEMANTIC.SUCCESS,
-  error: SEMANTIC.ERROR,
-  warning: SEMANTIC.WARNING,
-  info: SEMANTIC.INFO,
-  gray: BASIC.GRAY,
+  accent:    BRAND.ACCENT,
+  success:   SEMANTIC.SUCCESS,
+  error:     SEMANTIC.ERROR,
+  warning:   SEMANTIC.WARNING,
+  info:      SEMANTIC.INFO,
+  gray:      BASIC.GRAY,
 };
 
 export default {
+  PALETTE,
   BRAND,
   BASIC,
   DARK,
@@ -210,4 +213,4 @@ export default {
   DOMAIN,
   GRADIENTS,
   TAILWIND,
-}; 
+};
